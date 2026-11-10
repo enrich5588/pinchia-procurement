@@ -1,26 +1,60 @@
 {% extends "base.html" %}
-{% block content %}
-<div class="card">
-  <h1>登入</h1>
-  <p>請使用公司 Microsoft 365 帳號登入，系統將同步您的所屬部門。</p>
-  {% if m365_ready %}
-  <form method="post" action="{% url 'microsoft_login' %}">{% csrf_token %}
-    <input type="hidden" name="next" value="{{ next }}">
-    <button type="submit">使用公司 M365 帳號登入</button>
-  </form>
-  {% else %}
-  <p role="status">{{ m365_problem }}</p>
-  <button type="button" disabled>使用公司 M365 帳號登入</button>
-  {% endif %}
-  {% if allow_local_login %}
-  <details>
-    <summary>開發／維護用本機登入</summary>
-    <form method="post">{% csrf_token %}
-      <input type="hidden" name="next" value="{{ next }}">
-      {{ form.as_p }}
-      <button type="submit">本機登入</button>
-    </form>
-  </details>
-  {% endif %}
+{% load static %}
+{% block title %}登入｜品嘉建設集團{% endblock %}
+{% block body %}
+<div class="login">
+  <section class="login-story">
+    <a class="brand{% if shell.logo_white %} use-full{% endif %}" href="{% url 'login' %}">
+      <img src="{% static 'brand/logo-mark.svg' %}" alt="">
+      <span class="brand-text"><strong>品嘉建設集團</strong><small>採購與資產管理平台</small></span>
+      {% if shell.logo_white %}<img class="brand-full" src="{% static 'brand/logo-white.png' %}" alt="品嘉建設集團">{% endif %}
+    </a>
+    <div>
+      <p class="eyebrow">以信任為基礎，讓效率成為日常</p>
+      <h1>讓每一項需求，<br>都有<em>清楚的方向。</em></h1>
+      <p>串起採購、資產與簽核，讓跨部門合作更從容，專注每一份值得用心的工作。</p>
+    </div>
+    {% include "includes/hero_art.html" %}
+    <footer>品嘉建設集團 · 採購與資產管理平台</footer>
+  </section>
+  <div class="login-form-wrap">
+    <div class="login-box">
+      {% if shell.logo_full %}
+      <img src="{% static 'brand/logo-full.png' %}" alt="品嘉建設集團">
+      {% else %}
+      <img src="{% static 'brand/logo-mark.svg' %}" alt="">
+      {% endif %}
+      <h2>登入</h2>
+      <p class="subtitle">請使用公司 Microsoft 365 帳號登入，系統將同步您的所屬部門。</p>
+      {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+        <li class="hint{% if 'error' in message.tags %} error{% endif %}" role="status">{{ message }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      {% if m365_ready %}
+      <form method="post" action="{% url 'microsoft_login' %}">{% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+        <button class="btn" type="submit"><span class="ms-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>使用公司 M365 帳號登入</button>
+      </form>
+      {% else %}
+      <p role="status">{{ m365_problem }}</p>
+      <button class="btn" type="button" disabled>使用公司 M365 帳號登入</button>
+      {% endif %}
+      {% if allow_local_login %}
+      <details>
+        <summary>開發／維護用本機登入</summary>
+        <form method="post">{% csrf_token %}
+          <input type="hidden" name="next" value="{{ next }}">
+          {{ form.as_p }}
+          <button class="btn secondary" type="submit">本機登入</button>
+        </form>
+      </details>
+      {% endif %}
+      <p class="small">登入後將依部門開啟採購、資產、協作與簽核功能。本機密碼登入僅在開發設定開啟時提供。</p>
+      <div class="login-meta">內部作業平台 · 請使用公司帳號</div>
+    </div>
+  </div>
 </div>
 {% endblock %}

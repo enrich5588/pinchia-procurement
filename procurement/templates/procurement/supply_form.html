@@ -1,1 +1,11 @@
-{% extends "base.html" %}{% load static %}{% block title %}{{ form_title }} — 品嘉平台{% endblock %}{% block extra_head %}<link rel="stylesheet" href="{% static 'procurement/supply.css' %}"><script src="{% static 'procurement/supply-items.js' %}" defer></script>{% endblock %}{% block content %}<div class="card supply-form-card">{% include "procurement/_supply_form.html" %}</div>{% endblock %}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ form_title }}｜品嘉建設集團{% endblock %}
+{% block extra_head %}<script src="{% static 'procurement/supply-items.js' %}" defer></script>{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><p class="eyebrow">採購申請</p><h1>{{ form_title }}</h1><p class="subtitle">填寫需求與品項，送出後由管理部統一安排。</p></div>
+  <div class="actions"><a class="btn secondary" href="{% url 'supplies' %}">返回申請清單</a></div>
+</div>
+{% include "procurement/_supply_form.html" %}
+{% endblock %}

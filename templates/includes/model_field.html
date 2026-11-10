@@ -1,0 +1,8 @@
+<div class="field{% if field.name == 'notes' or field.name == 'accessories' or field.name == 'images' or field.name == 'content' or field.name == 'subject' or field.name == 'amount_range' or field.name == 'document_type' or field.name == 'specification' %} span-all{% endif %}{% if field.errors %} error{% endif %}">
+  <label {% if field.id_for_label %}for="{{ field.id_for_label }}"{% endif %}>{{ field.label }}{% if field.field.required %} <span class="required">*</span>{% endif %}</label>
+  {{ field }}
+  {% if field.name == "asset_no" and not is_edit %}<span class="number-status" data-number-status aria-live="polite"></span>{% endif %}
+  {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+  {{ field.errors }}
+  {% if field.name == "images" %}<div class="asset-image-grid" data-image-preview aria-live="polite"></div>{% endif %}
+</div>

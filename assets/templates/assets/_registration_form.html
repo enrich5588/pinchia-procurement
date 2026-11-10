@@ -1,57 +1,46 @@
-<div class="asset-form-content" data-asset-form-content>
-  <h2 id="asset-modal-title">{{ form_title }}</h2>
-  <p>標示 * 的欄位為必填；所屬部門預設為登入者所屬部門，可依實際需求修改。</p>
-  {% if source_asset %}<p class="registration-revision-notice">此修改將建立新的異動申請。管理部核准前，財產清冊中的 {{ source_asset.asset_no }} 仍保留原資料。</p>{% endif %}
+<div data-asset-form-content>
+  {% if is_modal %}<div class="modal-head"><h2 id="asset-modal-title">{{ form_title }}</h2></div>{% else %}<h2 id="asset-modal-title" class="sr-only">{{ form_title }}</h2>{% endif %}
+  {% if source_asset %}<div class="hint warning">{% include "includes/icon.html" with name="info" %}<div>此修改將建立新的異動申請。管理部核准前，財產清冊中的 {{ source_asset.asset_no }} 仍保留原資料。</div></div>{% endif %}
   <form method="post" enctype="multipart/form-data" action="{{ form_action }}" data-asset-form data-custodian-options-url="{% url 'registration_custodians' %}">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-    {% for field in form %}
-      {% if field.name == "asset_images_to_remove" %}
-        {% if field.field.queryset.exists %}
+    {% csrf_token %}{{ form.non_field_errors }}
+    <section class="panel">
+      <div class="panel-head"><div><h2><span class="section-number">01</span>基本資料</h2><p>所屬部門預設為登入者所屬部門，可依實際需求修改。</p></div></div>
+      <div class="panel-body"><div class="form-grid">{% for field in form %}{% if field.name == "name" or field.name == "company" or field.name == "category" or field.name == "brand" or field.name == "specification" %}{% include "includes/model_field.html" %}{% endif %}{% endfor %}</div></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><div><h2><span class="section-number">02</span>採購價格</h2><p>合計為單價＋營業稅，不乘以數量。</p></div></div>
+      <div class="panel-body"><div class="form-grid">{% for field in form %}{% if field.name == "quantity" or field.name == "unit_price" or field.name == "business_tax" or field.name == "total" %}{% include "includes/model_field.html" %}{% endif %}{% endfor %}</div></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><div><h2><span class="section-number">03</span>保管歸屬</h2></div></div>
+      <div class="panel-body"><div class="form-grid">{% for field in form %}{% if field.name == "department" or field.name == "custodian" or field.name == "purchase_date" or field.name == "useful_life_years" %}{% include "includes/model_field.html" %}{% endif %}{% endfor %}</div></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><div><h2><span class="section-number">04</span>圖片與備註</h2></div></div>
+      <div class="panel-body">
+        <div class="form-grid">{% for field in form %}{% if field.name == "accessories" or field.name == "notes" or field.name == "images" %}{% include "includes/model_field.html" %}{% endif %}{% endfor %}</div>
+        {% for field in form %}
+          {% if field.name == "asset_images_to_remove" and field.field.queryset.exists %}
           <fieldset class="asset-image-section">
             <legend>{{ field.label }}</legend>
             <p>{{ field.help_text }}</p>
-            <div class="asset-image-grid">
-              {% for photo in field.field.queryset %}
-                <div class="asset-image-item">
-                  <a href="{% url 'asset_image' photo.pk %}" target="_blank" rel="noopener"><img src="{% url 'asset_image' photo.pk %}" alt="現有財產圖片 {{ forloop.counter }}" loading="lazy"></a>
-                  <label><input type="checkbox" name="asset_images_to_remove" value="{{ photo.pk }}"{% if photo.pk|stringformat:"s" in field.value %} checked{% endif %}> 核准後移除圖片 {{ forloop.counter }}</label>
-                </div>
-              {% endfor %}
-            </div>
+            <div class="asset-image-grid">{% for photo in field.field.queryset %}<div class="asset-image-item"><a href="{% url 'asset_image' photo.pk %}" target="_blank" rel="noopener"><img src="{% url 'asset_image' photo.pk %}" alt="現有財產圖片 {{ forloop.counter }}" loading="lazy"></a><label><input type="checkbox" name="asset_images_to_remove" value="{{ photo.pk }}"{% if photo.pk|stringformat:"s" in field.value %} checked{% endif %}> 核准後移除圖片 {{ forloop.counter }}</label></div>{% endfor %}</div>
+            {{ field.errors }}
           </fieldset>
-        {% endif %}
-        {{ field.errors }}
-      {% elif field.name == "remove_images" %}
-        {% if field.field.queryset.exists %}
+          {% elif field.name == "remove_images" and field.field.queryset.exists %}
           <fieldset class="asset-image-section">
             <legend>現有圖片</legend>
             <p>{{ field.help_text }}</p>
-            <div class="asset-image-grid">
-              {% for photo in field.field.queryset %}
-                <div class="asset-image-item">
-                  <a href="{% url 'registration_image' photo.pk %}" target="_blank" rel="noopener"><img src="{% url 'registration_image' photo.pk %}" alt="申請圖片 {{ forloop.counter }}" loading="lazy"></a>
-                  <label><input type="checkbox" name="remove_images" value="{{ photo.pk }}"{% if photo.pk|stringformat:"s" in field.value %} checked{% endif %}> 移除圖片 {{ forloop.counter }}</label>
-                </div>
-              {% endfor %}
-            </div>
+            <div class="asset-image-grid">{% for photo in field.field.queryset %}<div class="asset-image-item"><a href="{% url 'registration_image' photo.pk %}" target="_blank" rel="noopener"><img src="{% url 'registration_image' photo.pk %}" alt="申請圖片 {{ forloop.counter }}" loading="lazy"></a><label><input type="checkbox" name="remove_images" value="{{ photo.pk }}"{% if photo.pk|stringformat:"s" in field.value %} checked{% endif %}> 移除圖片 {{ forloop.counter }}</label></div>{% endfor %}</div>
+            {{ field.errors }}
           </fieldset>
-        {% endif %}
-        {{ field.errors }}
-      {% else %}
-      <div class="asset-form-field">
-        <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
-        {{ field }}
-        {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
-        {{ field.errors }}
-        {% if field.name == "images" %}<div class="asset-image-grid" data-image-preview aria-live="polite"></div>{% endif %}
+          {% endif %}
+        {% endfor %}
       </div>
-      {% endif %}
-    {% endfor %}
-    <div class="asset-form-actions">
-      <button type="submit">{{ submit_label }}</button>
-      {% if is_modal %}<button type="button" class="asset-secondary-action" data-modal-close>取消</button>
-      {% else %}<a href="{% url 'registration_list' %}">取消</a>{% endif %}
-    </div>
+      <div class="form-actions">
+        {% if is_modal %}<button type="button" class="btn secondary" data-modal-close>取消</button>{% else %}<a class="btn secondary" href="{% url 'registration_list' %}">取消</a>{% endif %}
+        <button class="btn" type="submit">{{ submit_label }}</button>
+      </div>
+    </section>
   </form>
 </div>

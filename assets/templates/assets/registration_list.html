@@ -1,67 +1,98 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}資產登記 — 品嘉平台{% endblock %}
+{% block title %}資產登記｜品嘉建設集團{% endblock %}
 {% block extra_head %}
-  <link rel="stylesheet" href="{% static 'assets/asset-list.css' %}?v=20261019-1">
-  <link rel="stylesheet" href="{% static 'assets/asset-form.css' %}?v=20261109-1">
-  <link rel="stylesheet" href="{% static 'assets/registration.css' %}?v=20260917-2">
-  <script src="{% static 'assets/asset-form.js' %}?v=20261022-2" defer></script>
-  <script src="{% static 'assets/asset-modal.js' %}?v=20260917-2" defer></script>
-  <script src="{% static 'assets/registration.js' %}?v=20260826-1" defer></script>
+  <script src="{% static 'assets/asset-form.js' %}" defer></script>
+  <script src="{% static 'assets/asset-modal.js' %}" defer></script>
+  <script src="{% static 'assets/registration.js' %}" defer></script>
 {% endblock %}
 {% block content %}
-<section class="asset-page">
-  <header class="asset-hero">
-    <div><p class="asset-eyebrow">ASSET REGISTRATION</p><h1>資產登記</h1>
-      <p class="asset-subtitle">{% if can_manage %}檢視並處理全公司的資產登記申請。{% elif department %}檢視您送出的申請，申請中或退回案件可修改或取消。{% else %}您的帳號尚未設定部門，暫時無法提出申請。{% endif %}</p>
-    </div>
-    {% if can_apply %}<div class="asset-hero-actions"><a class="asset-secondary-hero-action" href="{% url 'registration_bulk_upload_template' %}">下載上傳範本</a><a class="asset-secondary-hero-action" href="{% url 'registration_bulk_upload' %}">批量上傳</a><a class="asset-primary-action" href="{% url 'registration_create' %}" data-asset-form-url="{% url 'registration_create' %}"><span aria-hidden="true">＋</span> 資產登記</a></div>{% endif %}
-  </header>
-
-  <div class="asset-stats" aria-label="申請案件統計">
-    <article class="asset-stat asset-stat-total"><div><strong>{{ summary.total }}</strong><span>全部案件</span></div></article>
-    <article class="asset-stat asset-stat-it"><div><strong>{{ summary.pending }}</strong><span>申請中</span></div></article>
-    <article class="asset-stat asset-stat-furniture"><div><strong>{{ summary.returned }}</strong><span>退回</span></div></article>
-    <article class="asset-stat asset-stat-other"><div><strong>{{ summary.closed }}</strong><span>已結案</span></div></article>
+<div class="page-head">
+  <div>
+    <p class="eyebrow">資產管理</p>
+    <h1>資產登記</h1>
+    <p class="subtitle">{% if can_manage %}檢視並處理全公司的資產登記申請。{% elif department %}檢視您送出的申請，申請中或退回案件可修改或取消。{% else %}您的帳號尚未設定部門，暫時無法提出申請。{% endif %}</p>
   </div>
-
-  <section class="asset-table-panel">
-    <div class="asset-table-heading"><div><h2>資產登記處理清單</h2><p>共 {{ summary.total }} 筆申請</p></div>{% if can_manage %}<form id="asset-registration-bulk-form" class="registration-bulk-actions" method="post">{% csrf_token %}<button type="submit" formaction="{% url 'registration_bulk_approve' %}" data-bulk-submit disabled>批量核准</button><button type="submit" class="danger" formaction="{% url 'registration_bulk_return' %}" data-bulk-submit disabled>批量退回</button></form>{% else %}<span class="asset-view-label">案件檢視</span>{% endif %}</div>
-    <div class="asset-table-wrap">
-      <table class="asset-table registration-table">
-        <thead><tr>{% if can_manage %}<th><input type="checkbox" data-bulk-select-all aria-label="選取全部可處理案件"></th>{% endif %}<th>案件編號</th><th>財產名稱</th><th>公司</th><th>財產類別</th><th>財產規格型號</th><th>配件</th><th>數量</th><th>單價</th><th>營業稅</th><th>合計</th><th>所屬部門</th><th>保管人員</th><th>採購日期</th><th>狀態</th><th>操作</th></tr></thead>
-        <tbody>
-        {% for item in registrations %}
-          <tr>
-            {% if can_manage %}<td>{% if item.status == "pending" and not item.target_asset_id %}<input type="checkbox" name="registration_ids" value="{{ item.pk }}" form="asset-registration-bulk-form" data-bulk-checkbox aria-label="選取案件 {{ item.case_no }}">{% else %}—{% endif %}</td>{% endif %}
-            <td><code class="asset-number">{{ item.case_no }}</code></td>
-            <td><strong>{{ item.name }}</strong>{% if item.target_asset_id %}<span class="registration-type-badge">財產異動</span>{% endif %}</td><td>{{ item.get_company_display }}</td><td><span class="asset-badge asset-badge-other">{{ item.category }}</span></td>
-            <td>{{ item.specification }}</td><td>{{ item.accessories|default:"—"|linebreaksbr }}</td><td>{{ item.quantity }}</td><td><span class="asset-money">{% if item.unit_price is not None %}{{ item.unit_price|floatformat:2 }}{% else %}—{% endif %}</span></td><td><span class="asset-money">{% if item.business_tax is not None %}{{ item.business_tax|floatformat:2 }}{% else %}—{% endif %}</span></td><td><strong class="asset-money">{{ item.total|floatformat:2 }}</strong></td><td><strong>{{ item.department.name }}</strong></td><td>{% if item.custodian %}{{ item.custodian.username }}{% else %}部門資產{% endif %}</td><td>{{ item.purchase_date|date:"Y/m/d" }}</td>
-            <td><span class="registration-status status-{{ item.status }}">{{ item.get_status_display }}</span></td>
-            <td><div class="registration-actions">
-              <a href="{% url 'registration_detail' item.pk %}" data-asset-form-url="{% url 'registration_detail' item.pk %}">查看</a>
-              {% if can_manage and item.status == "pending" %}
-                <a class="registration-approve" href="{% url 'registration_approve' item.pk %}" data-asset-form-url="{% url 'registration_approve' item.pk %}">核准</a>
-                <form method="post" action="{% url 'registration_return' item.pk %}">{% csrf_token %}<button type="submit" class="registration-return">退回</button></form>
-              {% elif not can_manage %}
-                {% if item.status == "pending" or item.status == "returned" %}
-                  <a href="{% url 'registration_edit' item.pk %}" data-asset-form-url="{% url 'registration_edit' item.pk %}">修改</a>
-                  <button type="button" class="registration-cancel" data-registration-cancel-url="{% url 'registration_cancel' item.pk %}" data-registration-case-no="{{ item.case_no }}">取消</button>
-                {% elif item.status == "approved" %}
-                  {% if item.asset_id or item.target_asset_id %}<a href="{% url 'registration_revise' item.pk %}" data-asset-form-url="{% url 'registration_revise' item.pk %}">再次修改</a>{% endif %}
-                {% endif %}
-              {% endif %}
-            </div></td>
-          </tr>
-        {% empty %}<tr class="asset-empty-row"><td colspan="{% if can_manage %}16{% else %}15{% endif %}"><div class="asset-empty"><strong>目前沒有資產登記申請</strong></div></td></tr>{% endfor %}
-        </tbody>
-      </table>
+  {% if can_apply %}
+  <div class="actions">
+    <a class="btn secondary" href="{% url 'registration_bulk_upload_template' %}">下載上傳範本</a>
+    <a class="btn secondary" href="{% url 'registration_bulk_upload' %}">批量上傳</a>
+    <a class="btn" href="{% url 'registration_create' %}" data-asset-form-url="{% url 'registration_create' %}">{% include "includes/icon.html" with name="plus" %}新增資產登記</a>
+  </div>
+  {% endif %}
+</div>
+<div class="stats">
+  <div class="stat accent"><span class="label">全部案件</span><strong>{{ summary.total }}</strong><span class="sub">{% if can_manage %}管理部檢視{% else %}我的申請{% endif %}</span></div>
+  <div class="stat"><span class="label">申請中</span><strong>{{ summary.pending }}</strong><span class="sub">待審核的登記</span></div>
+  <div class="stat"><span class="label">退回</span><strong>{{ summary.returned }}</strong><span class="sub">等待申請人補正</span></div>
+  <div class="stat"><span class="label">已結案</span><strong>{{ summary.closed }}</strong><span class="sub">核准及取消的案件</span></div>
+</div>
+<div class="tabs" role="group" aria-label="案件狀態篩選">
+  <button type="button" class="tab active" data-status-tab="" aria-pressed="true">全部案件<span>{{ summary.total }}</span></button>
+  <button type="button" class="tab" data-status-tab="申請中" aria-pressed="false">申請中<span>{{ summary.pending }}</span></button>
+  <button type="button" class="tab" data-status-tab="退回" aria-pressed="false">退回<span>{{ summary.returned }}</span></button>
+  <button type="button" class="tab" data-status-tab="closed" aria-pressed="false">已結案<span>{{ summary.closed }}</span></button>
+</div>
+<section class="panel" data-list-filter>
+  <div class="panel-head"><div><h2>資產登記處理清單</h2><p>{% if can_manage %}勾選新增登記案件可批量核准；異動申請需逐筆審核{% else %}共 {{ summary.total }} 筆申請{% endif %}</p></div></div>
+  <div class="filterbar">
+    <div class="field search"><label for="reg-search">快速搜尋</label><div class="search-input">{% include "includes/icon.html" with name="search" %}<input id="reg-search" type="search" placeholder="搜尋案件編號、名稱或保管人" data-list-query></div></div>
+    <div class="field"><label for="reg-dept">所屬部門</label><select id="reg-dept" data-list-dept><option value="">全部部門</option>{% for dept in departments %}<option value="{{ dept.name }}">{{ dept.name }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="reg-status">案件狀態</label><select id="reg-status" data-list-status><option value="">全部狀態</option><option>申請中</option><option>退回</option><option>已核准</option><option>取消</option></select></div>
+    <button type="button" class="btn ghost" data-list-reset>重設</button>
+  </div>
+  {% if can_manage %}
+  <form id="asset-registration-bulk-form" method="post">{% csrf_token %}
+    <div class="bulkbar" data-bulk-bar hidden><span data-bulk-count>已選取 0 筆</span>
+      <button type="submit" class="btn secondary sm" formaction="{% url 'registration_bulk_approve' %}" data-bulk-submit disabled>批量核准</button>
+      <button type="submit" class="btn danger sm" formaction="{% url 'registration_bulk_return' %}" data-bulk-submit disabled>批量退回</button>
     </div>
-  </section>
-
-  <dialog class="asset-modal" data-asset-modal aria-labelledby="asset-modal-title"><div class="asset-modal-shell"><button class="asset-modal-close" type="button" data-modal-close aria-label="關閉浮窗">×</button><div class="asset-modal-body" data-modal-body aria-live="polite"><p class="asset-modal-loading">正在載入…</p></div></div></dialog>
-  <dialog class="registration-confirm-modal" data-registration-confirm>
-    <form method="post" data-registration-cancel-form><h2>確認取消申請</h2><p>確定要取消案件 <strong data-registration-case></strong> 嗎？取消後將結案且不可修改。</p>{% csrf_token %}<div class="asset-form-actions"><button type="submit">確認取消</button><button type="button" class="asset-secondary-action" data-registration-confirm-close>返回</button></div></form>
-  </dialog>
+  </form>
+  {% endif %}
+  <div class="table-wrap">
+    <table class="responsive-table">
+      <thead><tr>{% if can_manage %}<th class="table-check"><input type="checkbox" data-bulk-select-all aria-label="選取全部可處理案件"></th>{% endif %}<th>案件編號</th><th>財產名稱</th><th>所屬部門／保管人員</th><th>合計</th><th>採購日期</th><th>狀態</th><th>操作</th></tr></thead>
+      <tbody>
+      {% for item in registrations %}
+        <tr data-list-row data-dept="{{ item.department.name }}" data-status="{{ item.get_status_display }}">
+          {% if can_manage %}<td class="table-check mobile-hide">{% if item.status == "pending" and not item.target_asset_id %}<input type="checkbox" name="registration_ids" value="{{ item.pk }}" form="asset-registration-bulk-form" data-bulk-checkbox aria-label="選取案件 {{ item.case_no }}">{% else %}—{% endif %}</td>{% endif %}
+          <td data-label="案件編號" class="title-cell"><code>{{ item.case_no }}</code><span class="mobile-only"><span class="badge status-{{ item.status }}">{{ item.get_status_display }}</span></span></td>
+          <td class="primary-cell"><strong>{{ item.name }}</strong><span class="sub">{{ item.get_company_display }}{% if item.target_asset_id %} · 財產異動{% else %} · 新增登記{% endif %}</span>{% if item.target_asset_id %}<span class="badge">財產異動</span>{% endif %}</td>
+          <td data-label="所屬部門／保管人員">{{ item.department.name }}<span class="sub">{% if item.custodian %}{{ item.custodian.username }}{% else %}部門資產{% endif %}</span></td>
+          <td data-label="合計"><strong>{{ item.total|floatformat:2 }}</strong></td>
+          <td data-label="採購日期">{{ item.purchase_date|date:"Y/m/d" }}</td>
+          <td data-label="狀態" class="mobile-hide"><span class="badge status-{{ item.status }}">{{ item.get_status_display }}</span></td>
+          <td class="action-cell"><div class="row-actions">
+            <a class="text-link" href="{% url 'registration_detail' item.pk %}" data-asset-form-url="{% url 'registration_detail' item.pk %}">查看{% include "includes/icon.html" with name="arrow" %}</a>
+            {% if can_manage and item.status == "pending" %}
+              <a class="btn secondary sm" href="{% url 'registration_approve' item.pk %}" data-asset-form-url="{% url 'registration_approve' item.pk %}">核准</a>
+              <form method="post" action="{% url 'registration_return' item.pk %}">{% csrf_token %}<button type="submit" class="btn danger sm">退回</button></form>
+            {% elif not can_manage %}
+              {% if item.status == "pending" or item.status == "returned" %}
+                <a class="btn secondary sm" href="{% url 'registration_edit' item.pk %}" data-asset-form-url="{% url 'registration_edit' item.pk %}">修改</a>
+                <button type="button" class="btn danger sm" data-registration-cancel-url="{% url 'registration_cancel' item.pk %}" data-registration-case-no="{{ item.case_no }}">取消</button>
+              {% elif item.status == "approved" %}
+                {% if item.asset_id or item.target_asset_id %}<a class="btn secondary sm" href="{% url 'registration_revise' item.pk %}" data-asset-form-url="{% url 'registration_revise' item.pk %}">再次修改</a>{% endif %}
+              {% endif %}
+            {% endif %}
+          </div></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="{% if can_manage %}8{% else %}7{% endif %}"><div class="empty"><h3>目前沒有資產登記申請</h3></div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="empty" data-list-empty hidden><h3>沒有符合條件的登記案件</h3><p>請重設篩選條件。</p></div>
+  <div class="table-foot"><span>共 {{ summary.total }} 筆</span><span>顯示目前載入的全部資料</span></div>
 </section>
+<dialog class="dialog-wide" data-asset-modal aria-labelledby="asset-modal-title"><button class="icon-btn modal-float-close" type="button" data-modal-close aria-label="關閉浮窗">×</button><div class="modal-body" data-modal-body><p>正在載入…</p></div></dialog>
+<dialog data-registration-confirm>
+  <form method="post" data-registration-cancel-form>
+    <div class="modal-head"><h2>確認取消申請</h2><button type="button" class="icon-btn" data-registration-confirm-close aria-label="關閉">×</button></div>
+    <div class="modal-body"><p>確定要取消案件 <strong data-registration-case></strong> 嗎？取消後將結案且不可修改。</p></div>
+    {% csrf_token %}
+    <div class="modal-actions"><button class="btn" type="submit">確認取消</button><button type="button" class="btn secondary" data-registration-confirm-close>返回</button></div>
+  </form>
+</dialog>
 {% endblock %}

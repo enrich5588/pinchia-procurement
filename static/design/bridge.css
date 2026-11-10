@@ -1,0 +1,52 @@
+/* App bridge: Django widgets, workflow controls, and image previews on top of the design system. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.messages{list-style:none;padding:0;margin:0 0 18px;display:grid;gap:8px}
+.messages .hint{margin:0}
+.number-status{display:block;min-height:1.2em;font-size:11px}
+.number-status[data-state="available"]{color:var(--green)}
+.number-status[data-state="duplicate"],.number-status[data-state="error"]{color:var(--red)}
+.number-status[data-state="checking"]{color:var(--muted)}
+.errorlist{list-style:none;padding:0;margin:4px 0 0;color:var(--red);font-size:12px}
+.field ul,.choice-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.field li label{font-weight:400;display:flex;gap:8px;align-items:flex-start}
+.helptext{font-size:10px;color:var(--muted)}
+.badge.status-pending{background:var(--gold-soft);color:#886021}
+.badge.status-processing{background:var(--blue-soft);color:var(--blue)}
+.badge.status-returned{background:var(--red-soft);color:var(--red)}
+.badge.status-approved,.badge.status-completed{background:var(--green-soft);color:var(--green)}
+.badge.status-cancelled,.badge.status-withdrawn{background:var(--gray-soft);color:var(--muted)}
+.row-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:flex-end}
+.row-actions form{display:inline}
+.row-actions .btn{min-height:32px}
+.item-list{counter-reset:item}
+.item-row .index::before{counter-increment:item;content:counter(item,decimal-leading-zero)}
+.item-row[hidden]{display:none!important}
+.asset-image-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.asset-image-item{margin:0;width:104px;font-size:10px;color:var(--muted)}
+.asset-image-item img,.asset-image-thumbnails img{width:84px;height:64px;object-fit:cover;border-radius:7px;border:1px solid var(--line);display:block;background:#f4f6f8}
+.asset-image-thumbnails{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.asset-clickable-row{cursor:pointer}
+.modal-float-close{position:absolute;top:12px;right:12px;z-index:2}
+.import-table input,.import-table select,.import-table textarea{width:100%;min-width:96px;min-height:36px;padding:6px 8px;border:1px solid #d7dde3;border-radius:6px;background:#fff;font-size:12px}
+.import-table td{vertical-align:top}
+.import-table tr.row-error{background:var(--red-soft)}
+.nav-foot form{margin-left:auto}
+button.icon-link{border:0;background:transparent;color:#bac8d9;padding:0;min-height:0;display:flex}
+button.icon-link:hover{color:#fff}
+.logout-form{margin:0}
+.schema-code{overflow-wrap:anywhere}
+.monitor-table details{border:0;margin:0;background:transparent}
+.monitor-table summary{padding:0}
+.monitor-table details[open]>summary{border:0}
+.full-data-wrap,.schema-table-wrap{overflow:auto;margin-top:12px}
+.audit,.audit-column{background:#fcf7e9}
+.choice-grid{display:grid;gap:8px}
+dialog.dialog-wide{width:min(980px,calc(100% - 24px))}
+.price-note{margin-top:8px}
+.quick span{display:block}
+.activity a{color:inherit}
+.activity a:hover{color:var(--gold-text)}
+@media(max-width:760px){
+  .row-actions{justify-content:flex-start}
+  .row-actions .btn{flex:0 0 auto}
+}

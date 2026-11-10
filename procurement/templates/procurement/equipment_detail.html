@@ -1,1 +1,9 @@
-{% extends "base.html" %}{% load static %}{% block title %}設備申請 {{ application.case_no }} — 品嘉平台{% endblock %}{% block extra_head %}<link rel="stylesheet" href="{% static 'procurement/supply.css' %}">{% endblock %}{% block content %}<div class="card supply-form-card">{% include "procurement/_equipment_detail.html" %}</div>{% endblock %}
+{% extends "base.html" %}
+{% block title %}設備申請 {{ application.case_no }}｜品嘉建設集團{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><p class="eyebrow">採購申請</p><h1>設備申請明細</h1><p class="subtitle">案件 {{ application.case_no }}</p></div>
+  <div class="actions"><a class="btn secondary" href="{% url 'equipment_procurement' %}">返回清單</a></div>
+</div>
+{% include "procurement/_equipment_detail.html" %}
+{% endblock %}

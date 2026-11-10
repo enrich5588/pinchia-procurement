@@ -1,7 +1,30 @@
 <div class="collaboration-task-content">
-  <header class="collaboration-detail-header"><div><p class="collaboration-eyebrow">COLLABORATION TASK</p><h2>協作案件 {{ task.case_no }}</h2><p>來自「{{ task.get_source_form_display }}」案件 {{ task.source_case_no }}</p></div><span class="collaboration-status status-{{ task.status }}">{{ task.get_status_display }}</span></header>
-  {% if task.status == "returned" %}<section class="collaboration-return-reason"><strong>退回原因</strong><p>{{ task.return_reason|default:"未填寫退回原因"|linebreaksbr }}</p><small>{% if task.returned_by %}{{ task.returned_by.username }} · {% endif %}{{ task.returned_at|date:"Y/m/d H:i" }}</small></section>{% endif %}
-  <dl class="card collaboration-meta"><div><dt>承接部門</dt><dd>{{ task.assigned_department.name }}</dd></div><div><dt>來源表單</dt><dd>{{ task.get_source_form_display }}</dd></div><div><dt>來源案件編號</dt><dd><code>{{ task.source_case_no }}</code></dd></div><div><dt>轉發人員</dt><dd>{{ task.created_by.username }}</dd></div><div><dt>建立日期</dt><dd>{{ task.created_at|date:"Y/m/d H:i" }}</dd></div><div><dt>修改日期</dt><dd>{{ task.updated_at|date:"Y/m/d H:i" }}</dd></div></dl>
-  <section class="card collaboration-source"><div class="collaboration-heading"><div><h3>來源表單內容</h3><p>以下內容依來源案件編號即時讀取。</p></div></div>{% if source_application %}{% include "procurement/_equipment_detail.html" with application=source_application is_modal=False %}{% elif source_missing %}<div class="collaboration-empty"><strong>找不到來源案件</strong><p>來源表單可能已移除，請洽系統管理員確認案件 {{ task.source_case_no }}。</p></div>{% else %}<div class="collaboration-empty"><strong>尚未支援此來源表單</strong></div>{% endif %}</section>
-  {% if is_modal %}<div class="supply-form-actions"><button type="button" class="secondary" data-collaboration-task-close>關閉</button></div>{% endif %}
+  <section class="panel">
+    <div class="detail-title">
+      <div><p class="eyebrow">協作專區</p><h2>協作案件 {{ task.case_no }}</h2><p class="subtitle">來自「{{ task.get_source_form_display }}」案件 {{ task.source_case_no }}</p></div>
+      <span class="badge status-{{ task.status }}">{{ task.get_status_display }}</span>
+    </div>
+    <div class="panel-body">
+      {% if task.status == "returned" %}
+      <section class="hint error"><div><strong>退回原因</strong><p>{{ task.return_reason|default:"未填寫退回原因"|linebreaksbr }}</p><small>{% if task.returned_by %}{{ task.returned_by.username }} · {% endif %}{{ task.returned_at|date:"Y/m/d H:i" }}</small></div></section>
+      {% endif %}
+      <dl class="kv three">
+        <div><dt>承接部門</dt><dd>{{ task.assigned_department.name }}</dd></div>
+        <div><dt>來源表單</dt><dd>{{ task.get_source_form_display }}</dd></div>
+        <div><dt>來源案件編號</dt><dd><code>{{ task.source_case_no }}</code></dd></div>
+        <div><dt>轉發人員</dt><dd>{{ task.created_by.username }}</dd></div>
+        <div><dt>建立日期</dt><dd>{{ task.created_at|date:"Y/m/d H:i" }}</dd></div>
+        <div><dt>修改日期</dt><dd>{{ task.updated_at|date:"Y/m/d H:i" }}</dd></div>
+      </dl>
+    </div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><div><h3>來源表單內容</h3><p>以下內容依來源案件編號即時讀取。</p></div></div>
+    <div class="panel-body">
+      {% if source_application %}{% include "procurement/_equipment_detail.html" with application=source_application is_modal=False %}
+      {% elif source_missing %}<div class="empty"><h3>找不到來源案件</h3><p>來源表單可能已移除，請洽系統管理員確認案件 {{ task.source_case_no }}。</p></div>
+      {% else %}<div class="empty"><h3>尚未支援此來源表單</h3></div>{% endif %}
+    </div>
+    {% if is_modal %}<div class="form-actions"><button type="button" class="btn secondary" data-collaboration-task-close>關閉</button></div>{% endif %}
+  </section>
 </div>

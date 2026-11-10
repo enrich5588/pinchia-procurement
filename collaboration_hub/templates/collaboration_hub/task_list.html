@@ -1,17 +1,61 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}協作專區 — 品嘉平台{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{% static 'procurement/supply.css' %}?v=20260826-3"><link rel="stylesheet" href="{% static 'collaboration_hub/collaboration.css' %}?v=20260826-3"><script src="{% static 'collaboration_hub/task-workflow.js' %}?v=20260826-1" defer></script>{% endblock %}
+{% block title %}協作專區｜品嘉建設集團{% endblock %}
+{% block extra_head %}<script src="{% static 'collaboration_hub/task-workflow.js' %}" defer></script>{% endblock %}
 {% block content %}
-<section class="collaboration-page">
-  <header class="collaboration-hero"><p class="collaboration-eyebrow">COLLABORATION HUB</p><h1>協作專區</h1><p>{% if can_manage %}查看已轉發給各協力部門的工作及退回原因。{% elif department %}接收並處理交由{{ department.name }}負責的跨部門工作。{% else %}帳號尚未設定所屬部門，無法接收協作工作。{% endif %}</p></header>
-  <div class="collaboration-stats"><article><strong>{{ summary.total }}</strong><span>全部案件</span></article><article><strong>{{ summary.pending }}</strong><span>待處理</span></article><article><strong>{{ summary.processing }}</strong><span>處理中</span></article><article><strong>{{ summary.returned }}</strong><span>已退回</span></article><article><strong>{{ summary.completed }}</strong><span>已完成</span></article><article><strong>{{ summary.withdrawn }}</strong><span>已撤回</span></article></div>
-  <section class="card collaboration-panel"><div class="collaboration-heading"><div><h2>協作案件清單</h2><p>共 {{ summary.total }} 筆案件</p></div></div><div class="collaboration-table-wrap"><table class="collaboration-table"><thead><tr><th>協作案件編號</th><th>來源表單</th><th>來源案件編號</th><th>承接部門</th><th>轉發人員</th><th>建立日期</th><th>狀態</th><th>操作</th></tr></thead><tbody>
-    {% for task in tasks %}<tr><td><code>{{ task.case_no }}</code></td><td>{{ task.get_source_form_display }}</td><td><code>{{ task.source_case_no }}</code></td><td>{{ task.assigned_department.name }}</td><td>{{ task.created_by.username }}</td><td>{{ task.created_at|date:"Y/m/d H:i" }}</td><td><span class="collaboration-status status-{{ task.status }}">{{ task.get_status_display }}</span>{% if task.status == "returned" %}<small class="collaboration-return-summary">{{ task.return_reason|default:"未填寫退回原因"|truncatechars:26 }}</small>{% endif %}</td><td><div class="collaboration-actions"><a class="collaboration-view" href="{% url 'collaboration_task_detail' task.pk %}" data-collaboration-detail-url="{% url 'collaboration_task_detail' task.pk %}">查看</a>{% if task.can_start_processing %}<form method="post" action="{% url 'collaboration_task_processing' task.pk %}">{% csrf_token %}<button class="processing" type="submit">處理中</button></form>{% endif %}{% if task.can_complete %}<form method="post" action="{% url 'collaboration_task_complete' task.pk %}">{% csrf_token %}<button class="complete" type="submit">完成</button></form>{% endif %}{% if task.can_return %}<button class="return" type="button" data-collaboration-return-url="{% url 'collaboration_task_return' task.pk %}">退回</button>{% endif %}{% if task.can_withdraw %}<button class="withdraw" type="button" data-collaboration-withdraw-url="{% url 'collaboration_task_withdraw' task.pk %}" data-collaboration-case-no="{{ task.case_no }}">撤回</button>{% endif %}</div></td></tr>
-    {% empty %}<tr><td colspan="8"><div class="collaboration-empty"><strong>目前沒有協作案件</strong><p>管理部轉發需求後，案件會出現在對應承接部門的清單中。</p></div></td></tr>{% endfor %}
-  </tbody></table></div></section>
-  <dialog class="collaboration-task-modal" data-collaboration-task-modal><div class="collaboration-task-shell"><button type="button" class="collaboration-forward-close" data-collaboration-task-close aria-label="關閉">×</button><div data-collaboration-task-body><p>正在載入…</p></div></div></dialog>
-  <dialog class="collaboration-forward-modal" data-collaboration-return-modal><div class="collaboration-forward-shell"><button type="button" class="collaboration-forward-close" data-collaboration-return-close aria-label="關閉">×</button><div data-collaboration-return-body><p>正在載入…</p></div></div></dialog>
-  <dialog class="supply-confirm" data-collaboration-withdraw-confirm><form method="post" data-collaboration-withdraw-form><h2>確認撤回協作案件</h2><p>確定撤回案件 <strong data-collaboration-withdraw-case></strong> 嗎？撤回後承接部門將無法繼續處理。</p>{% csrf_token %}<div class="supply-form-actions"><button type="submit">確認撤回</button><button type="button" class="secondary" data-collaboration-withdraw-close>返回</button></div></form></dialog>
+<div class="page-head">
+  <div><p class="eyebrow">協作專區</p><h1>協作案件</h1><p class="subtitle">{% if can_manage %}查看已轉發給各協力部門的工作及退回原因。{% elif department %}接收並處理交由{{ department.name }}負責的跨部門工作。{% else %}帳號尚未設定所屬部門，無法接收協作工作。{% endif %}</p></div>
+</div>
+<div class="stats">
+  <div class="stat accent"><span class="label">全部案件</span><strong>{{ summary.total }}</strong><span class="sub">已轉發的設備需求</span></div>
+  <div class="stat"><span class="label">待處理</span><strong>{{ summary.pending }}</strong><span class="sub">等待承接部門處理</span></div>
+  <div class="stat"><span class="label">處理中</span><strong>{{ summary.processing }}</strong><span class="sub">承接部門正在安排</span></div>
+  <div class="stat"><span class="label">已退回</span><strong>{{ summary.returned }}</strong><span class="sub">請確認退回原因</span></div>
+</div>
+<div class="tabs" role="group" aria-label="協作狀態">
+  <button type="button" class="tab active" data-status-tab="" aria-pressed="true">全部案件<span>{{ summary.total }}</span></button>
+  <button type="button" class="tab" data-status-tab="待處理" aria-pressed="false">待處理<span>{{ summary.pending }}</span></button>
+  <button type="button" class="tab" data-status-tab="處理中" aria-pressed="false">處理中<span>{{ summary.processing }}</span></button>
+  <button type="button" class="tab" data-status-tab="已完成" aria-pressed="false">已完成<span>{{ summary.completed }}</span></button>
+  <button type="button" class="tab" data-status-tab="已退回" aria-pressed="false">已退回<span>{{ summary.returned }}</span></button>
+  <button type="button" class="tab" data-status-tab="已撤回" aria-pressed="false">已撤回<span>{{ summary.withdrawn }}</span></button>
+</div>
+<section class="panel" data-list-filter>
+  <div class="panel-head"><div><h2>協作案件清單</h2><p>{% if can_manage %}管理部檢視 · 由設備申請轉發；不另建獨立任務內容{% else %}共 {{ summary.total }} 筆案件{% endif %}</p></div></div>
+  <div class="filterbar">
+    <div class="field search"><label for="task-search">快速搜尋</label><div class="search-input">{% include "includes/icon.html" with name="search" %}<input id="task-search" type="search" placeholder="搜尋案件編號或來源" data-list-query></div></div>
+    <div class="field"><label for="task-dept">所屬部門</label><select id="task-dept" data-list-dept><option value="">全部部門</option>{% for dept in departments %}<option value="{{ dept.name }}">{{ dept.name }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="task-status">案件狀態</label><select id="task-status" data-list-status><option value="">全部狀態</option><option>待處理</option><option>處理中</option><option>已完成</option><option>已退回</option><option>已撤回</option></select></div>
+    <button type="button" class="btn ghost" data-list-reset>重設</button>
+  </div>
+  <div class="table-wrap"><table class="responsive-table"><thead><tr><th>協作案件編號</th><th>來源表單／案件</th><th>承接部門</th><th>轉發人員</th><th>建立日期</th><th>狀態</th><th>操作</th></tr></thead><tbody>
+    {% for task in tasks %}
+    <tr data-list-row data-dept="{{ task.assigned_department.name }}" data-status="{{ task.get_status_display }}">
+      <td class="title-cell"><code>{{ task.case_no }}</code><span class="mobile-only"><span class="badge status-{{ task.status }}">{{ task.get_status_display }}</span></span></td>
+      <td class="primary-cell"><strong>{{ task.get_source_form_display }} {{ task.source_case_no }}</strong></td>
+      <td data-label="承接部門">{{ task.assigned_department.name }}</td>
+      <td data-label="轉發人員">{{ task.created_by.username }}</td>
+      <td data-label="建立日期">{{ task.created_at|date:"Y/m/d H:i" }}</td>
+      <td data-label="狀態" class="mobile-hide"><span class="badge status-{{ task.status }}">{{ task.get_status_display }}</span>{% if task.status == "returned" %}<span class="sub">{{ task.return_reason|default:"未填寫退回原因"|truncatechars:26 }}</span>{% endif %}</td>
+      <td class="action-cell"><div class="row-actions">
+        <a class="text-link" href="{% url 'collaboration_task_detail' task.pk %}" data-collaboration-detail-url="{% url 'collaboration_task_detail' task.pk %}">查看</a>
+        {% if task.can_start_processing %}<form method="post" action="{% url 'collaboration_task_processing' task.pk %}">{% csrf_token %}<button class="btn secondary sm" type="submit">處理中</button></form>{% endif %}
+        {% if task.can_complete %}<form method="post" action="{% url 'collaboration_task_complete' task.pk %}">{% csrf_token %}<button class="btn secondary sm" type="submit">完成</button></form>{% endif %}
+        {% if task.can_return %}<button class="btn danger sm" type="button" data-collaboration-return-url="{% url 'collaboration_task_return' task.pk %}">退回</button>{% endif %}
+        {% if task.can_withdraw %}<button class="btn danger sm" type="button" data-collaboration-withdraw-url="{% url 'collaboration_task_withdraw' task.pk %}" data-collaboration-case-no="{{ task.case_no }}">撤回</button>{% endif %}
+      </div></td>
+    </tr>
+    {% empty %}<tr><td colspan="7"><div class="empty"><h3>目前沒有協作案件</h3><p>管理部轉發需求後，案件會出現在對應承接部門的清單中。</p></div></td></tr>{% endfor %}
+  </tbody></table></div>
+  <div class="empty" data-list-empty hidden><h3>目前沒有符合條件的協作案件</h3></div>
+  <div class="table-foot"><span>共 {{ summary.total }} 筆</span><span>已完成 {{ summary.completed }} · 已撤回 {{ summary.withdrawn }}</span></div>
 </section>
+<dialog class="dialog-wide" data-collaboration-task-modal><button type="button" class="icon-btn modal-float-close" data-collaboration-task-close aria-label="關閉">×</button><div class="modal-body" data-collaboration-task-body><p>正在載入…</p></div></dialog>
+<dialog data-collaboration-return-modal><button type="button" class="icon-btn modal-float-close" data-collaboration-return-close aria-label="關閉">×</button><div class="modal-body" data-collaboration-return-body><p>正在載入…</p></div></dialog>
+<dialog data-collaboration-withdraw-confirm><form method="post" data-collaboration-withdraw-form>
+  <div class="modal-head"><h2>確認撤回協作案件</h2><button type="button" class="icon-btn" data-collaboration-withdraw-close aria-label="關閉">×</button></div>
+  <div class="modal-body"><p>確定撤回案件 <strong data-collaboration-withdraw-case></strong> 嗎？撤回後承接部門將無法繼續處理。</p></div>
+  {% csrf_token %}
+  <div class="modal-actions"><button class="btn" type="submit">確認撤回</button><button type="button" class="btn secondary" data-collaboration-withdraw-close>返回</button></div>
+</form></dialog>
 {% endblock %}

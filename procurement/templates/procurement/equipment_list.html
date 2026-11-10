@@ -1,22 +1,117 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}設備申請 — 品嘉平台{% endblock %}
+{% block title %}設備申請｜品嘉建設集團{% endblock %}
 {% block extra_head %}
-  <link rel="stylesheet" href="{% static 'procurement/procurement-tabs.css' %}?v=20260824-1"><link rel="stylesheet" href="{% static 'procurement/supply.css' %}?v=20260826-3"><link rel="stylesheet" href="{% static 'procurement/supply-workflow.css' %}?v=20260826-2"><link rel="stylesheet" href="{% static 'procurement/equipment.css' %}?v=20260826-1"><link rel="stylesheet" href="{% static 'collaboration_hub/collaboration.css' %}?v=20260826-1">
-  <script src="{% static 'procurement/equipment-items.js' %}?v=20260826-1" defer></script><script src="{% static 'procurement/equipment-modal.js' %}?v=20260826-1" defer></script><script src="{% static 'procurement/equipment-list.js' %}?v=20260826-3" defer></script><script src="{% static 'collaboration_hub/equipment-forward.js' %}?v=20260826-1" defer></script>
+  <script src="{% static 'procurement/equipment-items.js' %}" defer></script>
+  <script src="{% static 'procurement/equipment-modal.js' %}" defer></script>
+  <script src="{% static 'procurement/equipment-list.js' %}" defer></script>
+  <script src="{% static 'collaboration_hub/equipment-forward.js' %}" defer></script>
 {% endblock %}
 {% block content %}
-<section class="procurement-page supply-page">
-  <header class="supply-hero"><div><p class="procurement-eyebrow">PURCHASE REQUESTS</p><h1>採購申請專區</h1><p>{% if can_manage %}檢視並處理全公司的設備申請。{% else %}建立設備申請，並追蹤自己的案件狀態。{% endif %}</p></div>{% if can_apply %}<a class="supply-primary" href="{% url 'equipment_create' %}" data-equipment-form-url="{% url 'equipment_create' %}"><span>＋</span> 設備申請</a>{% endif %}</header>
-  {% include "procurement/_request_tabs.html" with active_procurement_tab="equipment" %}
-  <div class="supply-stats"><article><strong>{{ summary.total }}</strong><span>全部案件</span></article><article><strong>{{ summary.pending }}</strong><span>申請中</span></article><article><strong>{{ summary.processing }}</strong><span>處理中</span></article><article><strong>{{ summary.returned }}</strong><span>退回</span></article><article><strong>{{ summary.closed }}</strong><span>已結案</span></article></div>
-  <section class="card supply-list-panel"><div class="supply-list-heading"><div><h2>設備申請清單</h2><p>共 {{ summary.total }} 筆申請</p></div>{% if can_manage %}<form id="equipment-bulk-form" class="supply-bulk-actions" method="post">{% csrf_token %}<input type="hidden" name="asset_registration_reminder_confirmed" value="1"><button type="submit" class="processing" formaction="{% url 'equipment_bulk_processing' %}" data-equipment-bulk-submit disabled>批量處理</button><button type="button" data-equipment-bulk-complete-url="{% url 'equipment_bulk_complete' %}" data-equipment-bulk-submit disabled>批量完成</button><button type="submit" class="danger" formaction="{% url 'equipment_bulk_return' %}" data-equipment-bulk-submit disabled>批量退回</button></form>{% endif %}</div><div class="supply-table-wrap"><table class="supply-table"><thead><tr>{% if can_manage %}<th><input type="checkbox" data-equipment-select-all aria-label="選取全部可處理案件"></th>{% endif %}<th>案件編號</th><th>申請設備</th><th>申請部門</th><th>申請人</th><th>需求日期</th><th>狀態</th><th>操作</th></tr></thead><tbody>
-    {% for application in applications %}<tr>{% if can_manage %}<td>{% if application.status == "pending" or application.status == "processing" %}<input type="checkbox" name="application_ids" value="{{ application.pk }}" form="equipment-bulk-form" data-equipment-bulk-checkbox aria-label="選取案件 {{ application.case_no }}">{% else %}—{% endif %}</td>{% endif %}<td><code>{{ application.case_no }}</code></td><td><div class="supply-item-summary">{% for item in application.items.all %}<span>{{ item.equipment_name }} × {{ item.quantity }}</span>{% endfor %}</div></td><td>{{ application.department.name }}</td><td>{{ application.applicant.username }}</td><td>{{ application.need_date|date:"Y/m/d" }}</td><td><span class="supply-status status-{{ application.status }}">{{ application.get_status_display }}</span></td><td><div class="supply-actions"><a href="{% url 'equipment_detail' application.pk %}" data-equipment-form-url="{% url 'equipment_detail' application.pk %}">查看</a>{% if application.can_forward_to_collaboration %}<a href="{% url 'collaboration_forward_equipment' application.pk %}" data-collaboration-forward-url="{% url 'collaboration_forward_equipment' application.pk %}">轉發</a>{% endif %}{% if can_manage and application.status == "pending" %}<form method="post" action="{% url 'equipment_processing' application.pk %}">{% csrf_token %}<button class="processing" type="submit">處理中</button></form><button class="approve" type="button" data-equipment-complete-url="{% url 'equipment_complete' application.pk %}" data-equipment-case-no="{{ application.case_no }}">完成</button><form method="post" action="{% url 'equipment_return' application.pk %}">{% csrf_token %}<button class="return" type="submit">退回</button></form>{% elif can_manage and application.status == "processing" %}<button class="approve" type="button" data-equipment-complete-url="{% url 'equipment_complete' application.pk %}" data-equipment-case-no="{{ application.case_no }}">完成</button><form method="post" action="{% url 'equipment_return' application.pk %}">{% csrf_token %}<button class="return" type="submit">退回</button></form>{% elif not can_manage and application.status == "pending" or not can_manage and application.status == "returned" %}<a href="{% url 'equipment_edit' application.pk %}" data-equipment-form-url="{% url 'equipment_edit' application.pk %}">修改</a><button class="cancel" type="button" data-equipment-cancel-url="{% url 'equipment_cancel' application.pk %}" data-equipment-case-no="{{ application.case_no }}">取消</button>{% endif %}</div></td></tr>
-    {% empty %}<tr><td colspan="{% if can_manage %}8{% else %}7{% endif %}"><div class="procurement-empty"><strong>目前沒有設備申請</strong><p>{% if can_apply %}點擊「設備申請」建立第一筆案件。{% else %}目前沒有待處理案件。{% endif %}</p></div></td></tr>{% endfor %}
-  </tbody></table></div></section>
-  <dialog class="supply-modal" data-equipment-modal><div class="supply-modal-shell"><button type="button" class="supply-modal-close" data-equipment-modal-close aria-label="關閉">×</button><div data-equipment-modal-body><p>正在載入…</p></div></div></dialog>
-  <dialog class="supply-confirm" data-equipment-confirm><form method="post" data-equipment-cancel-form><h2>確認取消設備申請</h2><p>確定取消案件 <strong data-equipment-case></strong> 嗎？取消後將結案且不可修改。</p>{% csrf_token %}<div class="supply-form-actions"><button type="submit">確認取消</button><button type="button" class="secondary" data-equipment-confirm-close>返回</button></div></form></dialog>
-  <dialog class="supply-confirm" data-equipment-complete-confirm><form method="post" data-equipment-complete-form><h2>確認完成設備申請</h2><p>若有新增採購設備請記得完成資產登記</p><p data-equipment-complete-case-wrap>案件：<strong data-equipment-complete-case></strong></p>{% csrf_token %}<input type="hidden" name="asset_registration_reminder_confirmed" value="1"><div class="supply-form-actions"><button type="submit" data-equipment-complete-submit>確認完成</button><button type="button" class="secondary" data-equipment-complete-close>返回</button></div></form></dialog>
-  <dialog class="collaboration-forward-modal" data-collaboration-forward-modal><div class="collaboration-forward-shell"><button type="button" class="collaboration-forward-close" data-collaboration-forward-close aria-label="關閉">×</button><div data-collaboration-forward-body><p>正在載入…</p></div></div></dialog>
+<div class="page-head">
+  <div>
+    <p class="eyebrow">採購申請專區</p>
+    <h1>設備申請</h1>
+    <p class="subtitle">{% if can_manage %}檢視並處理全公司的設備申請。{% else %}建立設備申請，並追蹤自己的案件狀態。{% endif %}</p>
+  </div>
+  {% if can_apply %}<div class="actions"><a class="btn" href="{% url 'equipment_create' %}" data-equipment-form-url="{% url 'equipment_create' %}">{% include "includes/icon.html" with name="plus" %}新增設備申請</a></div>{% endif %}
+</div>
+{% include "procurement/_request_tabs.html" with active_procurement_tab="equipment" %}
+<div class="stats">
+  <div class="stat accent"><span class="label">全部案件</span><span class="stat-icon">{% include "includes/icon.html" with name="file" %}</span><strong>{{ summary.total }}</strong><span class="sub">{% if can_manage %}管理部檢視{% else %}我的申請{% endif %}</span></div>
+  <div class="stat"><span class="label">申請中</span><span class="stat-icon">{% include "includes/icon.html" with name="clock" %}</span><strong>{{ summary.pending }}</strong><span class="sub">等待管理部安排</span></div>
+  <div class="stat"><span class="label">處理中</span><span class="stat-icon">{% include "includes/icon.html" with name="screen" %}</span><strong>{{ summary.processing }}</strong><span class="sub">採購與協作進行中</span></div>
+  <div class="stat"><span class="label">已結案</span><span class="stat-icon">{% include "includes/icon.html" with name="check-simple" %}</span><strong>{{ summary.closed }}</strong><span class="sub">包含已提供與取消</span></div>
+</div>
+<div class="tabs" role="group" aria-label="案件狀態篩選">
+  <button type="button" class="tab active" data-status-tab="" aria-pressed="true">全部案件<span>{{ summary.total }}</span></button>
+  <button type="button" class="tab" data-status-tab="申請中" aria-pressed="false">申請中<span>{{ summary.pending }}</span></button>
+  <button type="button" class="tab" data-status-tab="處理中" aria-pressed="false">處理中<span>{{ summary.processing }}</span></button>
+  <button type="button" class="tab" data-status-tab="退回" aria-pressed="false">退回<span>{{ summary.returned }}</span></button>
+  <button type="button" class="tab" data-status-tab="closed" aria-pressed="false">已結案<span>{{ summary.closed }}</span></button>
+</div>
+<section class="panel" data-list-filter>
+  <div class="panel-head"><div><h2>設備申請清單</h2><p>{% if can_manage %}可勾選多筆申請進行批量處理，或轉發至協作部門{% else %}共 {{ summary.total }} 筆申請{% endif %}</p></div></div>
+  <div class="filterbar">
+    <div class="field search"><label for="equipment-search">快速搜尋</label><div class="search-input">{% include "includes/icon.html" with name="search" %}<input id="equipment-search" type="search" placeholder="搜尋案件編號、設備或申請人" data-list-query></div></div>
+    <div class="field"><label for="equipment-dept">所屬部門</label><select id="equipment-dept" data-list-dept><option value="">全部部門</option>{% for dept in departments %}<option value="{{ dept.name }}">{{ dept.name }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="equipment-status">案件狀態</label><select id="equipment-status" data-list-status><option value="">全部狀態</option><option>申請中</option><option>處理中</option><option>退回</option><option>已提供</option><option>取消</option></select></div>
+    <button type="button" class="btn ghost" data-list-reset>重設</button>
+  </div>
+  {% if can_manage %}
+  <form id="equipment-bulk-form" method="post">{% csrf_token %}
+    <input type="hidden" name="asset_registration_reminder_confirmed" value="1">
+    <div class="bulkbar" data-bulk-bar hidden><span data-bulk-count>已選取 0 筆</span>
+      <button type="submit" class="btn secondary sm" formaction="{% url 'equipment_bulk_processing' %}" data-equipment-bulk-submit disabled>批量處理</button>
+      <button type="button" class="btn secondary sm" data-equipment-bulk-complete-url="{% url 'equipment_bulk_complete' %}" data-equipment-bulk-submit disabled>批量完成</button>
+      <button type="submit" class="btn danger sm" formaction="{% url 'equipment_bulk_return' %}" data-equipment-bulk-submit disabled>批量退回</button>
+    </div>
+  </form>
+  {% endif %}
+  <div class="table-wrap">
+    <table class="responsive-table">
+      <thead><tr>{% if can_manage %}<th class="table-check"><input type="checkbox" data-equipment-select-all aria-label="選取全部可處理案件"></th>{% endif %}<th>案件編號</th><th>申請設備</th><th>申請部門</th><th>申請人</th><th>需求日期</th><th>狀態</th><th>操作</th></tr></thead>
+      <tbody>
+      {% for application in applications %}
+        <tr data-list-row data-dept="{{ application.department.name }}" data-status="{{ application.get_status_display }}">
+          {% if can_manage %}<td class="table-check mobile-hide">{% if application.status == "pending" or application.status == "processing" %}<input type="checkbox" name="application_ids" value="{{ application.pk }}" form="equipment-bulk-form" data-equipment-bulk-checkbox aria-label="選取案件 {{ application.case_no }}">{% else %}—{% endif %}</td>{% endif %}
+          <td data-label="案件編號" class="title-cell"><code>{{ application.case_no }}</code><span class="mobile-only"><span class="badge status-{{ application.status }}">{{ application.get_status_display }}</span></span></td>
+          <td class="primary-cell"><strong>{% for item in application.items.all %}{% if not forloop.first %}、{% endif %}{{ item.equipment_name }} × {{ item.quantity }}{% empty %}—{% endfor %}</strong></td>
+          <td data-label="申請部門">{{ application.department.name }}</td>
+          <td data-label="申請人">{{ application.applicant.username }}</td>
+          <td data-label="需求日期">{{ application.need_date|date:"Y/m/d" }}</td>
+          <td data-label="狀態" class="mobile-hide"><span class="badge status-{{ application.status }}">{{ application.get_status_display }}</span></td>
+          <td class="action-cell"><div class="row-actions">
+            <a class="text-link" href="{% url 'equipment_detail' application.pk %}" data-equipment-form-url="{% url 'equipment_detail' application.pk %}">查看{% include "includes/icon.html" with name="arrow" %}</a>
+            {% if application.can_forward_to_collaboration %}<a class="btn secondary sm" href="{% url 'collaboration_forward_equipment' application.pk %}" data-collaboration-forward-url="{% url 'collaboration_forward_equipment' application.pk %}">轉發</a>{% endif %}
+            {% if can_manage and application.status == "pending" %}
+              <form method="post" action="{% url 'equipment_processing' application.pk %}">{% csrf_token %}<button class="btn secondary sm" type="submit">處理中</button></form>
+              <button class="btn secondary sm" type="button" data-equipment-complete-url="{% url 'equipment_complete' application.pk %}" data-equipment-case-no="{{ application.case_no }}">完成</button>
+              <form method="post" action="{% url 'equipment_return' application.pk %}">{% csrf_token %}<button class="btn danger sm" type="submit">退回</button></form>
+            {% elif can_manage and application.status == "processing" %}
+              <button class="btn secondary sm" type="button" data-equipment-complete-url="{% url 'equipment_complete' application.pk %}" data-equipment-case-no="{{ application.case_no }}">完成</button>
+              <form method="post" action="{% url 'equipment_return' application.pk %}">{% csrf_token %}<button class="btn danger sm" type="submit">退回</button></form>
+            {% elif not can_manage and application.status == "pending" or not can_manage and application.status == "returned" %}
+              <a class="btn secondary sm" href="{% url 'equipment_edit' application.pk %}" data-equipment-form-url="{% url 'equipment_edit' application.pk %}">修改</a>
+              <button class="btn danger sm" type="button" data-equipment-cancel-url="{% url 'equipment_cancel' application.pk %}" data-equipment-case-no="{{ application.case_no }}">取消</button>
+            {% endif %}
+          </div></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="{% if can_manage %}8{% else %}7{% endif %}"><div class="empty"><h3>目前沒有設備申請</h3><p>{% if can_apply %}點擊「新增設備申請」建立第一筆案件。{% else %}目前沒有待處理案件。{% endif %}</p></div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="empty" data-list-empty hidden><h3>沒有符合條件的申請</h3><p>試試其他關鍵字，或按重設查看全部。</p></div>
+  <div class="table-foot"><span>共 {{ summary.total }} 筆</span><span>顯示目前載入的全部資料</span></div>
 </section>
+<dialog data-equipment-modal>
+  <button type="button" class="icon-btn modal-float-close" data-equipment-modal-close aria-label="關閉">×</button>
+  <div class="modal-body" data-equipment-modal-body><p>正在載入…</p></div>
+</dialog>
+<dialog data-equipment-confirm>
+  <form method="post" data-equipment-cancel-form>
+    <div class="modal-head"><h2>確認取消設備申請</h2><button type="button" class="icon-btn" data-equipment-confirm-close aria-label="關閉">×</button></div>
+    <div class="modal-body"><p>確定取消案件 <strong data-equipment-case></strong> 嗎？取消後將結案且不可修改。</p></div>
+    {% csrf_token %}
+    <div class="modal-actions"><button class="btn" type="submit">確認取消</button><button type="button" class="btn secondary" data-equipment-confirm-close>返回</button></div>
+  </form>
+</dialog>
+<dialog data-equipment-complete-confirm>
+  <form method="post" data-equipment-complete-form>
+    <div class="modal-head"><h2>確認完成設備申請</h2><button type="button" class="icon-btn" data-equipment-complete-close aria-label="關閉">×</button></div>
+    <div class="modal-body">
+      <p>若有新增採購設備請記得完成資產登記</p>
+      <p data-equipment-complete-case-wrap>案件：<strong data-equipment-complete-case></strong></p>
+    </div>
+    {% csrf_token %}
+    <input type="hidden" name="asset_registration_reminder_confirmed" value="1">
+    <div class="modal-actions"><button class="btn" type="submit" data-equipment-complete-submit>確認完成</button><button type="button" class="btn secondary" data-equipment-complete-close>返回</button></div>
+  </form>
+</dialog>
+<dialog data-collaboration-forward-modal>
+  <button type="button" class="icon-btn modal-float-close" data-collaboration-forward-close aria-label="關閉">×</button>
+  <div class="modal-body" data-collaboration-forward-body><p>正在載入…</p></div>
+</dialog>
 {% endblock %}

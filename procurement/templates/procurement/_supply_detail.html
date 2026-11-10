@@ -1,1 +1,42 @@
-<div class="supply-form-content"><h2 id="supply-modal-title">用品申請 {{ application.case_no }}</h2><p><span class="supply-status status-{{ application.status }}">{{ application.get_status_display }}</span></p><dl class="supply-detail"><div><dt>申請部門</dt><dd>{{ application.department.name }}</dd></div><div><dt>申請人</dt><dd>{{ application.applicant.username }}</dd></div><div><dt>需求日期</dt><dd>{{ application.need_date|date:"Y/m/d" }}</dd></div><div><dt>備註</dt><dd>{{ application.notes|default:"—"|linebreaksbr }}</dd></div></dl><h3>申請用品</h3><div class="supply-detail-items">{% for item in application.items.all %}<div><strong>{{ item.display_name }}</strong><span>數量 {{ item.quantity }}</span></div>{% endfor %}</div>{% if is_modal %}<div class="supply-form-actions"><button type="button" class="secondary" data-supply-modal-close>關閉</button></div>{% endif %}</div>
+<div class="{% if not is_modal %}two-col{% endif %}">
+  <div>
+    <section class="panel">
+      <div class="detail-title">
+        <span class="asset-icon">{% include "includes/icon.html" with name="pen" %}</span>
+        <div><p class="eyebrow">案件編號 {{ application.case_no }}</p><h2 id="supply-modal-title">辦公用品申請明細</h2></div>
+        <span class="badge status-{{ application.status }}">{{ application.get_status_display }}</span>
+      </div>
+      <div class="panel-body">
+        <dl class="kv">
+          <div><dt>申請部門</dt><dd>{{ application.department.name }}</dd></div>
+          <div><dt>申請人</dt><dd>{{ application.applicant.username }}</dd></div>
+          <div><dt>需求日期</dt><dd>{{ application.need_date|date:"Y/m/d" }}</dd></div>
+          <div><dt>建立日期</dt><dd>{{ application.created_at|date:"Y/m/d H:i" }}（台北時間）</dd></div>
+        </dl>
+        <div class="divider"></div>
+        <h3>申請品項</h3>
+        <div class="table-wrap"><table><thead><tr><th>物品名稱</th><th>數量</th></tr></thead><tbody>
+          {% for item in application.items.all %}<tr><td>{{ item.display_name }}</td><td>{{ item.quantity }}</td></tr>{% endfor %}
+        </tbody></table></div>
+        <div class="divider"></div>
+        <h3>備註</h3>
+        <p class="prose">{{ application.notes|default:"—"|linebreaksbr }}</p>
+      </div>
+    </section>
+  </div>
+  <aside>
+    <section class="panel">
+      <div class="panel-head"><div><h2>案件紀錄</h2></div></div>
+      <div class="panel-body">
+        <dl class="kv">
+          <div><dt>建立者</dt><dd>{{ application.created_by.username }}</dd></div>
+          <div><dt>最後修改者</dt><dd>{{ application.updated_by.username }}</dd></div>
+          <div><dt>修改日期</dt><dd>{{ application.updated_at|date:"Y/m/d H:i" }}（台北時間）</dd></div>
+          <div><dt>結案日期</dt><dd>{% if application.closed_at %}{{ application.closed_at|date:"Y/m/d H:i" }}{% else %}尚未結案{% endif %}</dd></div>
+        </dl>
+        <p class="history-note">此模組沒有逐關簽核歷程；此處顯示案件現有的建立及修改紀錄。</p>
+      </div>
+      {% if is_modal %}<div class="form-actions"><button type="button" class="btn secondary" data-supply-modal-close>關閉</button></div>{% endif %}
+    </section>
+  </aside>
+</div>

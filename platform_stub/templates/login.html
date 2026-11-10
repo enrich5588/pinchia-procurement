@@ -1,11 +1,22 @@
 {% extends "base.html" %}
-{% block content %}
-<div class="card">
-  <h1>登入(stub)</h1>
-  <p>正式站走公司 MS365 登入;開發環境用測試帳號(見 README)。</p>
-  <form method="post">{% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">登入</button>
-  </form>
+{% block title %}登入｜品嘉建設集團{% endblock %}
+{% block body %}
+<div class="login">
+  <section class="login-story">
+    <div class="brand"><span class="brand-text"><strong>品嘉建設集團</strong><small>採購與資產管理平台</small></span></div>
+    <div>
+      <h1>開發環境登入</h1>
+      <p>正式站使用公司 Microsoft 365。此頁只保留歷史本機登入表單。</p>
+    </div>
+  </section>
+  <div class="login-form-wrap">
+    <div class="login-box">
+      <h2>登入</h2>
+      <form method="post">{% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn" type="submit">登入</button>
+      </form>
+    </div>
+  </div>
 </div>
 {% endblock %}

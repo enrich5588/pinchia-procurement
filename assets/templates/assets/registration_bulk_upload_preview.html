@@ -1,25 +1,21 @@
 {% extends "base.html" %}
-{% load static %}
-{% block title %}資產登記匯入預覽 — 品嘉平台{% endblock %}
-{% block extra_head %}
-  <link rel="stylesheet" href="{% static 'assets/asset-list.css' %}?v=20261022-1">
-  <link rel="stylesheet" href="{% static 'assets/asset-form.css' %}?v=20261109-1">
-{% endblock %}
+{% block title %}資產登記匯入預覽｜品嘉建設集團{% endblock %}
 {% block content %}
-<section class="asset-page asset-import-preview-page">
-  <header class="asset-import-preview-heading"><div><p class="asset-eyebrow">REGISTRATION IMPORT PREVIEW</p><h1>資產登記匯入預覽</h1><p>{{ batch.source_filename }}｜讀取 {{ formset.total_form_count }} 筆｜跳過 {{ batch.skipped|length }} 筆</p></div></header>
-  {% if batch.skipped %}<details class="asset-import-skipped" open><summary>已跳過 {{ batch.skipped|length }} 筆缺少必要欄位的資料</summary><ul>{% for warning in batch.skipped %}<li>{{ warning }}</li>{% endfor %}</ul></details>{% endif %}
-  {% if import_errors %}<div class="asset-import-errors" role="alert"><h2>無法完成送出</h2><ul>{% for error in import_errors %}<li>{{ error }}</li>{% endfor %}</ul></div>{% endif %}
-  <form method="post" class="asset-import-preview-form">
-    {% csrf_token %}{{ formset.management_form }}
-    {% if formset.non_form_errors %}<div class="asset-import-errors">{{ formset.non_form_errors }}</div>{% endif %}
-    <div class="asset-import-preview-summary"><strong>請逐筆核對資料</strong><span>可直接修改欄位；取消勾選的資料不會建立申請。</span></div>
-    <div class="asset-import-table-wrap"><table class="asset-import-table">
+<div class="page-head"><div><p class="eyebrow">資產管理</p><h1>資產登記匯入預覽</h1><p class="subtitle">{{ batch.source_filename }}｜讀取 {{ formset.total_form_count }} 筆｜跳過 {{ batch.skipped|length }} 筆</p></div></div>
+<div class="upload-steps"><span><b>1</b>上傳檔案</span><i></i><span class="current"><b>2</b>預覽確認</span><i></i><span><b>3</b>建立申請</span></div>
+{% if batch.skipped %}<details open><summary>已跳過 {{ batch.skipped|length }} 筆缺少必要欄位的資料</summary><div class="details-content"><ul>{% for warning in batch.skipped %}<li>{{ warning }}</li>{% endfor %}</ul></div></details>{% endif %}
+{% if import_errors %}<div class="hint error" role="alert"><div><strong>無法完成送出</strong><ul>{% for error in import_errors %}<li>{{ error }}</li>{% endfor %}</ul></div></div>{% endif %}
+<form method="post">
+  {% csrf_token %}{{ formset.management_form }}
+  {% if formset.non_form_errors %}<div class="hint error">{{ formset.non_form_errors }}</div>{% endif %}
+  <section class="panel">
+    <div class="panel-head"><div><h2>請逐筆核對資料</h2><p>可直接修改欄位；取消勾選的資料不會建立申請。</p></div></div>
+    <div class="table-wrap"><table class="import-table mini-table">
       <thead><tr><th>送出</th><th>Excel 列</th><th>狀態</th><th>公司*</th><th>財產類別*</th><th>財產名稱*</th><th>廠牌</th><th>規格型號</th><th>配件</th><th>數量*</th><th>單價</th><th>營業稅</th><th>所屬部門*</th><th>保管人員</th><th>採購日期*</th><th>圖片</th><th>備註</th></tr></thead>
       <tbody>{% for form in formset %}
-        <tr{% if form.errors %} class="asset-import-row-error"{% endif %}>
+        <tr{% if form.errors %} class="row-error"{% endif %}>
           <td>{{ form.row_index }}{{ form.include }}</td><td>{{ form.source_row_number.value }}</td>
-          <td>{% if form.errors %}<span class="asset-import-status error">請修正</span>{% else %}<span class="asset-import-status ready">待送出</span>{% endif %}</td>
+          <td>{% if form.errors %}<span class="badge returned">請修正</span>{% else %}<span class="badge approved">待送出</span>{% endif %}</td>
           <td>{{ form.company }}{{ form.company.errors }}</td><td>{{ form.category }}{{ form.category.errors }}</td><td>{{ form.name }}{{ form.name.errors }}</td>
           <td>{{ form.brand }}{{ form.brand.errors }}</td><td>{{ form.specification }}{{ form.specification.errors }}</td><td>{{ form.accessories }}{{ form.accessories.errors }}</td>
           <td>{{ form.quantity }}{{ form.quantity.errors }}</td><td>{{ form.unit_price }}{{ form.unit_price.errors }}</td><td>{{ form.business_tax }}{{ form.business_tax.errors }}</td>
@@ -28,7 +24,7 @@
         </tr>
       {% empty %}<tr><td colspan="17">沒有可送出的資料。</td></tr>{% endfor %}</tbody>
     </table></div>
-    <div class="asset-import-preview-actions"><button class="asset-secondary-action" type="submit" name="action" value="cancel" formnovalidate>取消上傳</button><button type="submit" name="action" value="confirm">確認送出（{{ formset.total_form_count }}）</button></div>
-  </form>
-</section>
+    <div class="form-actions"><button class="btn secondary" type="submit" name="action" value="cancel" formnovalidate>取消上傳</button><button class="btn" type="submit" name="action" value="confirm">確認送出（{{ formset.total_form_count }}）</button></div>
+  </section>
+</form>
 {% endblock %}

@@ -1,1 +1,6 @@
-{% extends "base.html" %}{% load static %}{% block title %}轉發設備需求 — 品嘉平台{% endblock %}{% block extra_head %}<link rel="stylesheet" href="{% static 'procurement/supply.css' %}"><link rel="stylesheet" href="{% static 'collaboration_hub/collaboration.css' %}">{% endblock %}{% block content %}<div class="card collaboration-forward-card">{% include "collaboration_hub/_equipment_forward_form.html" %}</div>{% endblock %}
+{% extends "base.html" %}
+{% block title %}轉發設備需求｜品嘉建設集團{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">協作專區</p><h1>轉發設備需求</h1></div></div>
+<section class="panel">{% include "collaboration_hub/_equipment_forward_form.html" %}</section>
+{% endblock %}

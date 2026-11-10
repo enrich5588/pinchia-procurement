@@ -47,6 +47,7 @@ def task_list(request):
     return render(request, "collaboration_hub/task_list.html", {
         "tasks": tasks, "summary": summary, "department": department,
         "can_manage": can_manage,
+        "departments": Department.objects.order_by("name"),
     })
 
 

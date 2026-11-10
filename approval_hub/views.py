@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from organization.gate import feature_required
-from organization.models import user_department
+from organization.models import Department, user_department
 from project_options.approvals import APPROVAL_DOCUMENT_PRIORITY
 
 from .forms import ApprovalDecisionForm, ApprovalRequestForm
@@ -97,6 +97,7 @@ def approval_list(request):
     return render(request, "approval_hub/approval_list.html", {
         "approvals": approvals, "summary": summary, "awaiting_me": awaiting_me,
         "department": user_department(request.user),
+        "departments": Department.objects.order_by("name"),
     })
 
 

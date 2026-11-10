@@ -1,6 +1,58 @@
-<div class="supply-form-content"><h2 id="equipment-modal-title">{{ form_title }}</h2><p>申請部門及申請人由登入帳號自動帶入；標示 * 為必填。</p><form method="post" action="{{ form_action }}" data-equipment-form>{% csrf_token %}{{ form.non_field_errors }}
-  <div class="supply-readonly-grid"><div><span>申請部門 *</span><strong>{{ department.name }}</strong></div><div><span>申請人 *</span><strong>{{ applicant.username }}</strong></div></div>
-  <section class="supply-items-section"><div class="supply-items-heading"><div><h3>申請設備 *</h3><p>可新增多個設備項目，設備名稱請直接輸入。</p></div><button type="button" data-add-equipment-item><span>＋</span> 新增項目</button></div>{{ formset.management_form }}{{ formset.non_form_errors }}
-    <div class="supply-item-list" data-equipment-item-list>{% for item_form in formset %}<div class="supply-item-row equipment-item-row" data-equipment-item-row>{{ item_form.id }}<div><label for="{{ item_form.equipment_name.id_for_label }}">物品名稱 *</label>{{ item_form.equipment_name }}{{ item_form.equipment_name.errors }}</div><div><label for="{{ item_form.quantity.id_for_label }}">數量 *</label>{{ item_form.quantity }}{{ item_form.quantity.errors }}</div><div class="supply-delete-control">{{ item_form.DELETE }}<button type="button" data-remove-equipment-item>移除</button></div></div>{% endfor %}</div>
-    <template data-empty-equipment-item><div class="supply-item-row equipment-item-row" data-equipment-item-row>{{ formset.empty_form.id }}<div><label for="{{ formset.empty_form.equipment_name.id_for_label }}">物品名稱 *</label>{{ formset.empty_form.equipment_name }}</div><div><label for="{{ formset.empty_form.quantity.id_for_label }}">數量 *</label>{{ formset.empty_form.quantity }}</div><div class="supply-delete-control">{{ formset.empty_form.DELETE }}<button type="button" data-remove-equipment-item>移除</button></div></div></template>
-  </section>{% for field in form %}<div class="supply-form-field"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}{{ field.errors }}</div>{% endfor %}<div class="supply-form-actions"><button type="submit">{{ submit_label }}</button>{% if is_modal %}<button type="button" class="secondary" data-equipment-modal-close>取消</button>{% else %}<a href="{% url 'equipment_procurement' %}">取消</a>{% endif %}</div></form></div>
+<div class="{% if not is_modal %}two-col{% endif %}">
+  <div>
+    {% if is_modal %}<div class="modal-head"><h2 id="equipment-modal-title">{{ form_title }}</h2></div>{% else %}<h2 id="equipment-modal-title" class="sr-only">{{ form_title }}</h2>{% endif %}
+    <form method="post" action="{{ form_action }}" data-equipment-form>
+      {% csrf_token %}{{ form.non_field_errors }}
+      <section class="panel">
+        <div class="panel-head"><div><h2><span class="section-number">01</span>申請資訊</h2><p>* 為必填欄位</p></div></div>
+        <div class="panel-body">
+          <div class="hint">{% include "includes/icon.html" with name="info" %}<div>申請部門與申請人由登入帳號帶入，無須手動填寫。</div></div>
+          <div class="form-grid">
+            <div class="field"><label>申請部門</label><input value="{{ department.name }}" readonly></div>
+            <div class="field"><label>申請人</label><input value="{{ applicant.username }}" readonly></div>
+            {% for field in form %}{% if field.name == "need_date" %}{% include "includes/model_field.html" %}{% endif %}{% endfor %}
+          </div>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><div><h2><span class="section-number">02</span>申請設備</h2><p>可新增多個設備項目，設備名稱請直接輸入。</p></div></div>
+        <div class="panel-body">
+          {{ formset.management_form }}{{ formset.non_form_errors }}
+          <div class="item-list" data-equipment-item-list>
+            {% for item_form in formset %}
+            <div class="item-row" data-equipment-item-row>
+              <span class="index">{{ item_form.id }}</span>
+              <div class="field"><label for="{{ item_form.equipment_name.id_for_label }}">物品名稱 <span class="required">*</span></label>{{ item_form.equipment_name }}{{ item_form.equipment_name.errors }}</div>
+              <div class="field"><label for="{{ item_form.quantity.id_for_label }}">數量 <span class="required">*</span></label>{{ item_form.quantity }}{{ item_form.quantity.errors }}</div>
+              <div><div class="sr-only">{{ item_form.DELETE }}</div><button type="button" class="icon-btn" data-remove-equipment-item aria-label="移除品項">×</button></div>
+            </div>
+            {% endfor %}
+          </div>
+          <template data-empty-equipment-item>
+            <div class="item-row" data-equipment-item-row>
+              <span class="index">{{ formset.empty_form.id }}</span>
+              <div class="field"><label for="{{ formset.empty_form.equipment_name.id_for_label }}">物品名稱 <span class="required">*</span></label>{{ formset.empty_form.equipment_name }}</div>
+              <div class="field"><label for="{{ formset.empty_form.quantity.id_for_label }}">數量 <span class="required">*</span></label>{{ formset.empty_form.quantity }}</div>
+              <div><div class="sr-only">{{ formset.empty_form.DELETE }}</div><button type="button" class="icon-btn" data-remove-equipment-item aria-label="移除品項">×</button></div>
+            </div>
+          </template>
+          <button type="button" class="add-item" data-add-equipment-item>{% include "includes/icon.html" with name="plus" %}新增一項設備</button>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><div><h2><span class="section-number">03</span>需求規格</h2></div></div>
+        <div class="panel-body">{% for field in form %}{% if field.name == "notes" %}{% include "includes/model_field.html" %}{% endif %}{% endfor %}</div>
+        <div class="form-actions">
+          {% if is_modal %}<button type="button" class="btn secondary" data-equipment-modal-close>取消</button>{% else %}<a class="btn secondary" href="{% url 'equipment_procurement' %}">取消</a>{% endif %}
+          <button class="btn" type="submit">{{ submit_label }}</button>
+        </div>
+      </section>
+    </form>
+  </div>
+  {% if not is_modal %}
+  <aside class="note-card">
+    <h3>規格寫清楚，協作更順。</h3>
+    <p>設備名稱、數量與規格會跟著案件走。管理部可再轉發到承接部門。</p>
+  </aside>
+  {% endif %}
+</div>

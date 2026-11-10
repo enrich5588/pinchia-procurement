@@ -1,4 +1,5 @@
-{% extends "base.html" %}{% load static %}
-{% block title %}簽核處理 — 品嘉平台{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{% static 'approval_hub/approval.css' %}">{% endblock %}
-{% block content %}<section class="card approval-standalone">{% include "approval_hub/_decision_form.html" %}</section>{% endblock %}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}簽核決議｜品嘉建設集團{% endblock %}
+{% block extra_head %}<script src="{% static 'approval_hub/approval.js' %}" defer></script>{% endblock %}
+{% block content %}<section class="panel">{% include "approval_hub/_decision_form.html" %}</section>{% endblock %}

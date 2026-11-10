@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from organization.gate import feature_required
-from organization.models import user_department
+from organization.models import Department, user_department
 
 from .forms import (
     EquipmentApplicationForm,
@@ -28,7 +28,9 @@ from .services import next_equipment_case_no, next_office_supply_case_no
 
 @login_required
 def home(request):
-    return render(request, "procurement/home.html", {"dept": user_department(request.user)})
+    from .dashboard import build_dashboard
+
+    return render(request, "procurement/home.html", build_dashboard(request.user))
 
 
 @login_required
@@ -55,6 +57,7 @@ def supply_list(request):
         "applications": applications, "summary": summary,
         "dept": department, "can_manage": can_manage,
         "can_apply": not can_manage and department is not None,
+        "departments": Department.objects.order_by("name"),
     })
 
 
@@ -378,6 +381,7 @@ def equipment_list(request):
         "applications": applications, "summary": summary,
         "dept": department, "can_manage": can_manage,
         "can_apply": not can_manage and department is not None,
+        "departments": Department.objects.order_by("name"),
     })
 
 

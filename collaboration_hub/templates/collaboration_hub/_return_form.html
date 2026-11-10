@@ -1,1 +1,14 @@
-<div class="collaboration-forward-content"><h2>退回協作案件</h2><p>案件 <code>{{ task.case_no }}</code> 將退回發送方。退回原因可留空。</p><form method="post" action="{{ form_action }}" data-collaboration-return-form>{% csrf_token %}{{ form.non_field_errors }}<div class="collaboration-form-field"><label for="{{ form.return_reason.id_for_label }}">{{ form.return_reason.label }}</label>{{ form.return_reason }}{{ form.return_reason.errors }}</div><div class="supply-form-actions"><button type="submit">送出退回</button>{% if is_modal %}<button type="button" class="secondary" data-collaboration-return-close>取消</button>{% else %}<a href="{% url 'collaboration_task_list' %}">取消</a>{% endif %}</div></form></div>
+<div>
+  <div class="modal-head"><h2>退回協作案件</h2></div>
+  <form method="post" action="{{ form_action }}" data-collaboration-return-form>
+    {% csrf_token %}{{ form.non_field_errors }}
+    <div class="modal-body">
+      <p>案件 <code>{{ task.case_no }}</code> 將退回發送方。退回原因（非必填）。</p>
+      <div class="field"><label for="{{ form.return_reason.id_for_label }}">{{ form.return_reason.label }}</label>{{ form.return_reason }}{{ form.return_reason.errors }}</div>
+    </div>
+    <div class="modal-actions">
+      {% if is_modal %}<button type="button" class="btn secondary" data-collaboration-return-close>取消</button>{% else %}<a class="btn secondary" href="{% url 'collaboration_task_list' %}">取消</a>{% endif %}
+      <button class="btn" type="submit">送出退回</button>
+    </div>
+  </form>
+</div>

@@ -489,6 +489,7 @@ def registration_list(request):
         "can_manage": can_manage,
         "can_apply": not can_manage and department is not None,
         "department": department,
+        "departments": Department.objects.order_by("name"),
     })
 
 

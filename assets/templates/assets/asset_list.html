@@ -1,188 +1,94 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}財產清冊 — 品嘉平台{% endblock %}
+{% block title %}財產清冊｜品嘉建設集團{% endblock %}
 {% block extra_head %}
-  <link rel="stylesheet" href="{% static 'assets/asset-list.css' %}?v=20261019-1">
-  <link rel="stylesheet" href="{% static 'assets/asset-form.css' %}?v=20261109-1">
-  <script src="{% static 'assets/asset-filter.js' %}?v=20260820-2" defer></script>
-  <script src="{% static 'assets/asset-form.js' %}?v=20261022-2" defer></script>
-  <script src="{% static 'assets/asset-modal.js' %}?v=20260917-2" defer></script>
+  <script src="{% static 'assets/asset-filter.js' %}" defer></script>
+  <script src="{% static 'assets/asset-form.js' %}" defer></script>
+  <script src="{% static 'assets/asset-modal.js' %}" defer></script>
 {% endblock %}
 {% block content %}
-<section class="asset-page">
-  <header class="asset-hero">
-    <div>
-      <p class="asset-eyebrow">ASSET MANAGEMENT</p>
-      <h1>財產清冊</h1>
-      <p class="asset-subtitle">
-        {% if can_manage %}
-          掌握全公司資產配置、保管責任與採購資訊。
-        {% elif department %}
-          目前顯示由 {{ department.name }} 負責管理的資產。
-        {% else %}
-          您目前沒有部門資料，因此沒有可顯示的資產。
-        {% endif %}
-      </p>
-    </div>
-    {% if can_manage %}
-      <div class="asset-hero-actions">
-        <a class="asset-secondary-hero-action" href="{% url 'asset_bulk_upload_template' %}">
-          <span aria-hidden="true">⇩</span> 下載上傳範本
-        </a>
-        <a class="asset-secondary-hero-action" href="{% url 'asset_bulk_upload' %}">
-          <span aria-hidden="true">⇧</span> 批量上傳
-        </a>
-        <a class="asset-primary-action" href="{% url 'asset_create' %}" data-asset-form-url="{% url 'asset_create' %}">
-          <span aria-hidden="true">＋</span> 新增公司財產
-        </a>
-      </div>
-    {% endif %}
-  </header>
-
-  <div class="asset-stats" aria-label="目前清冊統計">
-    <article class="asset-stat asset-stat-total">
-      <span class="asset-stat-icon" aria-hidden="true">▦</span>
-      <div><strong>{{ summary.total }}</strong><span>目前結果</span></div>
-    </article>
-    <article class="asset-stat asset-stat-it">
-      <span class="asset-stat-icon" aria-hidden="true">⌘</span>
-      <div><strong>{{ summary.pinjia_development }}</strong><span>品嘉建設</span></div>
-    </article>
-    <article class="asset-stat asset-stat-furniture">
-      <span class="asset-stat-icon" aria-hidden="true">▰</span>
-      <div><strong>{{ summary.pinjia_construction }}</strong><span>品嘉營造</span></div>
-    </article>
-    <article class="asset-stat asset-stat-other">
-      <span class="asset-stat-icon" aria-hidden="true">◇</span>
-      <div><strong>{{ summary.pinjia_asset }}</strong><span>品佳資產</span></div>
-    </article>
+<div class="page-head">
+  <div>
+    <p class="eyebrow">資產管理</p>
+    <h1>財產清冊</h1>
+    <p class="subtitle">{% if can_manage %}從每一件設備開始，建立清晰、可信賴的資產紀錄。{% elif department %}目前顯示由 {{ department.name }} 負責管理的資產。{% else %}您目前沒有部門資料，因此沒有可顯示的資產。{% endif %}</p>
   </div>
-
   {% if can_manage %}
-    <form class="asset-filters" method="get" data-auto-submit>
-      <div class="asset-filter-heading">
-        <span class="asset-filter-icon" aria-hidden="true">☷</span>
-        <div><strong>篩選清冊</strong><small>選擇後立即更新清冊</small></div>
-      </div>
-      <div class="asset-filter-field">
-        <label for="department">所屬部門</label>
-        <select id="department" name="department">
-          <option value="">全部部門</option>
-          {% for dept in departments %}
-            <option value="{{ dept.pk }}"{% if selected_department == dept.pk|stringformat:"s" %} selected{% endif %}>{{ dept.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="asset-filter-field">
-        <label for="category">財產類別</label>
-        <select id="category" name="category">
-          <option value="">全部類別</option>
-          {% for category in categories %}
-            <option value="{{ category }}"{% if selected_category == category %} selected{% endif %}>{{ category }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      {% if selected_department or selected_category %}
-        <a class="asset-filter-clear" href="{% url 'asset_list' %}">清除篩選</a>
-      {% endif %}
-    </form>
+  <div class="actions">
+    <a class="btn secondary" href="{% url 'asset_bulk_upload_template' %}">{% include "includes/icon.html" with name="download" %}下載上傳範本</a>
+    <a class="btn secondary" href="{% url 'asset_bulk_upload' %}">{% include "includes/icon.html" with name="upload" %}批量上傳</a>
+    <a class="btn" href="{% url 'asset_create' %}" data-asset-form-url="{% url 'asset_create' %}">{% include "includes/icon.html" with name="plus" %}新增財產</a>
+  </div>
   {% endif %}
-
-  <section class="asset-table-panel" aria-labelledby="asset-table-title">
-    <div class="asset-table-heading">
-      <div>
-        <h2 id="asset-table-title">資產明細</h2>
-        <p>共 {{ summary.total }} 筆{% if selected_department or selected_category %}符合篩選條件的{% endif %}資產</p>
-      </div>
-      <span class="asset-view-label">清冊檢視</span>
-    </div>
-
-    <div class="asset-table-wrap">
-      <table class="asset-table">
-        <thead>
-          <tr>
-            <th scope="col">財產編號</th>
-            <th scope="col">財產名稱</th>
-            <th scope="col">公司</th>
-            <th scope="col">財產類別</th>
-            <th scope="col">廠牌</th>
-            <th scope="col">圖片</th>
-            <th scope="col">財產規格型號</th>
-            <th scope="col">配件</th>
-            <th scope="col">數量</th>
-            <th scope="col">單價</th>
-            <th scope="col">營業稅</th>
-            <th scope="col">合計</th>
-            <th scope="col">所屬部門</th>
-            <th scope="col">保管人員</th>
-            <th scope="col">採購日期</th>
-            <th scope="col">使用年限</th>
-            <th scope="col">備註（保固期限等）</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for asset in assets %}
-            <tr class="asset-clickable-row" data-asset-form-url="{% url 'asset_detail' asset.pk %}" tabindex="0" role="button" aria-label="查看 {{ asset.asset_no }} {{ asset.name }}">
-              <td data-label="財產編號"><code class="asset-number">{{ asset.asset_no }}</code></td>
-              <td data-label="財產名稱">
-                <div class="asset-name-cell">
-                  <span class="asset-category-icon asset-category-other" aria-hidden="true">◇</span>
-                  <strong>{{ asset.name }}</strong>
-                </div>
-              </td>
-              <td data-label="公司"><strong>{{ asset.get_company_display }}</strong></td>
-              <td data-label="財產類別">
-                <span class="asset-badge asset-badge-other">{{ asset.category }}</span>
-              </td>
-              <td data-label="廠牌">{{ asset.brand|default:"尚未填寫" }}</td>
-              <td data-label="圖片">
-                <div class="asset-image-thumbnails">
-                  {% for photo in asset.images.all %}
-                    <a href="{% url 'asset_image' photo.pk %}" target="_blank" rel="noopener" aria-label="查看 {{ asset.name }} 圖片 {{ forloop.counter }}"><img src="{% url 'asset_image' photo.pk %}" alt="{{ asset.name }} 圖片 {{ forloop.counter }}" loading="lazy"></a>
-                  {% empty %}<span class="asset-muted">尚無圖片</span>{% endfor %}
-                </div>
-              </td>
-              <td data-label="財產規格型號"><span class="asset-spec">{{ asset.specification|default:"尚未填寫" }}</span></td>
-              <td data-label="配件"><span class="asset-notes">{{ asset.accessories|default:"—"|linebreaksbr }}</span></td>
-              <td data-label="數量">{{ asset.quantity }}</td>
-              <td data-label="單價"><span class="asset-money">{% if asset.unit_price is not None %}{{ asset.unit_price|floatformat:2 }}{% else %}—{% endif %}</span></td>
-              <td data-label="營業稅"><span class="asset-money">{% if asset.business_tax is not None %}{{ asset.business_tax|floatformat:2 }}{% else %}—{% endif %}</span></td>
-              <td data-label="合計"><strong class="asset-money">{{ asset.total|floatformat:2 }}</strong></td>
-              <td data-label="所屬部門"><strong class="asset-department">{{ asset.department.name }}</strong></td>
-              <td data-label="保管人員">
-                {% if asset.custodian %}
-                  <span class="asset-custodian"><span aria-hidden="true">{{ asset.custodian.username|slice:":1"|upper }}</span>{{ asset.custodian.username }}</span>
-                {% else %}
-                  <span class="asset-muted">部門資產</span>
-                {% endif %}
-              </td>
-              <td data-label="採購日期"><time datetime="{{ asset.purchase_date|date:'Y-m-d' }}">{{ asset.purchase_date|date:"Y/m/d" }}</time></td>
-              <td data-label="使用年限">{% if asset.useful_life_years %}{{ asset.useful_life_years }} 年{% else %}<span class="asset-muted">未設定</span>{% endif %}</td>
-              <td data-label="備註（保固期限等）"><span class="asset-notes">{{ asset.notes|default:"—"|linebreaksbr }}</span></td>
-            </tr>
-          {% empty %}
-            <tr class="asset-empty-row">
-              <td colspan="17">
-                <div class="asset-empty">
-                  <span aria-hidden="true">◇</span>
-                  <strong>目前沒有符合條件的財產</strong>
-                  <p>{% if can_manage %}可以調整篩選條件，或新增第一筆公司財產。{% else %}所屬部門尚未登錄財產。{% endif %}</p>
-                </div>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-    <dialog class="asset-modal" data-asset-modal aria-labelledby="asset-modal-title">
-      <div class="asset-modal-shell">
-        <button class="asset-modal-close" type="button" data-modal-close aria-label="關閉浮窗">×</button>
-        <div class="asset-modal-body" data-modal-body aria-live="polite">
-          <p class="asset-modal-loading">正在載入表單…</p>
-        </div>
-      </div>
-    </dialog>
+</div>
+<div class="stats" aria-label="目前清冊統計">
+  <div class="stat accent"><span class="label">財產總筆數</span><span class="stat-icon">{% include "includes/icon.html" with name="box" %}</span><strong>{{ summary.total }}</strong><span class="sub">{% if can_manage %}目前結果 · 全公司{% else %}目前結果{% endif %}</span></div>
+  <div class="stat"><span class="label">資訊設備</span><span class="stat-icon">{% include "includes/icon.html" with name="screen" %}</span><strong>{{ summary.it_equipment }}</strong><span class="sub">電腦、螢幕與辦公設備</span></div>
+  <div class="stat"><span class="label">桌椅櫃子</span><strong>{{ summary.furniture }}</strong><span class="sub">辦公家具</span></div>
+  <div class="stat"><span class="label">其他資產</span><strong>{{ summary.other }}</strong><span class="sub">其他設備與資源</span></div>
+</div>
+<section class="panel" data-list-filter>
+  <div class="panel-head"><div><h2>公司財產</h2><p>主要欄位集中呈現；完整規格、價格與圖片可於明細查看</p></div></div>
+  {% if can_manage %}
+  <form class="filterbar" method="get" data-auto-submit>
+    <div class="field"><label for="department">所屬部門</label><select id="department" name="department"><option value="">全部部門</option>{% for dept in departments %}<option value="{{ dept.pk }}"{% if selected_department == dept.pk|stringformat:"s" %} selected{% endif %}>{{ dept.name }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="category">財產類別</label><select id="category" name="category"><option value="">全部類別</option>{% for category in categories %}<option value="{{ category }}"{% if selected_category == category %} selected{% endif %}>{{ category }}</option>{% endfor %}</select></div>
+    {% if selected_department or selected_category %}<a class="btn ghost" href="{% url 'asset_list' %}">重設</a>{% endif %}
+  </form>
+  {% endif %}
+  <div class="filterbar">
+    <div class="field search"><label for="asset-search">快速搜尋</label><div class="search-input">{% include "includes/icon.html" with name="search" %}<input id="asset-search" type="search" placeholder="搜尋編號、名稱、廠牌或保管人" data-list-query></div></div>
+    <button type="button" class="btn ghost" data-list-reset>清除關鍵字</button>
+  </div>
+  <div class="table-wrap">
+    <table class="responsive-table">
+      <thead><tr>
+        <th scope="col">財產編號</th>
+        <th scope="col">財產名稱</th>
+        <th scope="col">公司</th>
+        <th scope="col">財產類別</th>
+        <th scope="col">廠牌</th>
+        <th scope="col">財產規格型號</th>
+        <th scope="col">圖片</th>
+        <th scope="col">所屬部門</th>
+        <th scope="col">保管人員</th>
+        <th scope="col">合計</th>
+        <th scope="col">數量</th>
+        <th scope="col">採購日期</th>
+        <th scope="col">使用年限</th>
+        <th scope="col">備註（保固期限等）</th>
+        <th scope="col">操作</th>
+      </tr></thead>
+      <tbody>
+      {% for asset in assets %}
+        <tr class="asset-clickable-row" data-list-row data-asset-form-url="{% url 'asset_detail' asset.pk %}" tabindex="0" role="button" aria-label="查看 {{ asset.asset_no }} {{ asset.name }}" data-dept="{{ asset.department.name }}" data-status="">
+          <td data-label="財產編號" class="title-cell"><code>{{ asset.asset_no }}</code></td>
+          <td data-label="財產名稱" class="primary-cell"><strong>{{ asset.name }}</strong></td>
+          <td data-label="公司">{{ asset.get_company_display }}</td>
+          <td data-label="財產類別"><span class="badge">{{ asset.category }}</span></td>
+          <td data-label="廠牌">{{ asset.brand|default:"尚未填寫" }}</td>
+          <td data-label="財產規格型號">{{ asset.specification|default:"尚未填寫" }}</td>
+          <td data-label="圖片"><div class="asset-image-thumbnails">{% for photo in asset.images.all %}<a href="{% url 'asset_image' photo.pk %}" target="_blank" rel="noopener" aria-label="查看 {{ asset.name }} 圖片 {{ forloop.counter }}"><img src="{% url 'asset_image' photo.pk %}" alt="{{ asset.name }} 圖片 {{ forloop.counter }}" loading="lazy"></a>{% empty %}<span class="muted">尚無圖片</span>{% endfor %}</div></td>
+          <td data-label="所屬部門"><strong>{{ asset.department.name }}</strong></td>
+          <td data-label="保管人員">{% if asset.custodian %}{{ asset.custodian.username }}{% else %}部門資產{% endif %}</td>
+          <td data-label="合計"><strong>{{ asset.total|floatformat:2 }}</strong></td>
+          <td data-label="數量">{{ asset.quantity }}</td>
+          <td data-label="採購日期">{{ asset.purchase_date|date:"Y/m/d" }}</td>
+          <td data-label="使用年限">{% if asset.useful_life_years %}{{ asset.useful_life_years }} 年{% else %}<span class="muted">未設定</span>{% endif %}</td>
+          <td data-label="備註（保固期限等）">{{ asset.notes|default:"—"|linebreaksbr }}</td>
+          <td class="action-cell"><a class="text-link" href="{% url 'asset_detail' asset.pk %}" data-asset-form-url="{% url 'asset_detail' asset.pk %}">查看{% include "includes/icon.html" with name="arrow" %}</a></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="15"><div class="empty"><h3>目前沒有符合條件的財產</h3><p>{% if can_manage %}可以調整篩選條件，或新增第一筆公司財產。{% else %}所屬部門尚未登錄財產。{% endif %}</p></div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="empty" data-list-empty hidden><h3>找不到符合的財產</h3><p>請調整關鍵字或篩選條件。</p></div>
+  <div class="table-foot"><span>共 {{ summary.total }} 筆{% if selected_department or selected_category %}符合篩選條件的{% endif %}資產</span><span>清冊檢視</span></div>
 </section>
+<dialog class="dialog-wide" data-asset-modal aria-labelledby="asset-modal-title">
+  <button class="icon-btn modal-float-close" type="button" data-modal-close aria-label="關閉浮窗">×</button>
+  <div class="modal-body" data-modal-body aria-live="polite"><p>正在載入表單…</p></div>
+</dialog>
 {% endblock %}

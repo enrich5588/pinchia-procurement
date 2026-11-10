@@ -1,8 +1,88 @@
 {% extends "base.html" %}
+{% block title %}工作總覽｜品嘉建設集團{% endblock %}
 {% block content %}
-<div class="card">
-  <h1>你好,{{ user.username }}</h1>
-  <p>部門:{{ dept|default:"未設定部門" }}</p>
-  <p>請從側欄選擇採購申請、資產管理、協作案件或數位簽呈。</p>
+<div class="page-head">
+  <div>
+    <p class="eyebrow">我的工作空間</p>
+    <h1>工作總覽</h1>
+    <p class="subtitle">每一項需求，都有清楚的下一步。</p>
+  </div>
+  {% if can_create_approval %}
+  <div class="actions"><a class="btn" href="{% url 'approval_create' %}">{% include "includes/icon.html" with name="plus" %}建立簽呈</a></div>
+  {% endif %}
+</div>
+<section class="hero">
+  <p class="eyebrow">攜手築起更有效率的日常</p>
+  <h1>{{ greeting }}，{{ display_name }}。</h1>
+  <p>{{ hero_text }}</p>
+  <a class="btn gold sm" href="{% url 'approval_list' %}">{% include "includes/icon.html" with name="arrow" %}查看簽核中案件</a>
+  {% include "includes/hero_art.html" %}
+</section>
+<div class="stats">
+  <div class="stat accent"><span class="label">簽核中案件</span><span class="stat-icon">{% include "includes/icon.html" with name="check" %}</span><strong>{{ approval_pending }}</strong><span class="sub">依公文優先順序關注</span></div>
+  <div class="stat"><span class="label">用品申請中</span><span class="stat-icon">{% include "includes/icon.html" with name="pen" %}</span><strong>{{ supply_pending }}</strong><span class="sub">{{ scope }}</span></div>
+  <div class="stat"><span class="label">設備處理中</span><span class="stat-icon">{% include "includes/icon.html" with name="screen" %}</span><strong>{{ equipment_processing }}</strong><span class="sub">{{ scope }}</span></div>
+  <div class="stat"><span class="label">資產待審核</span><span class="stat-icon">{% include "includes/icon.html" with name="box" %}</span><strong>{{ registration_pending }}</strong><span class="sub">{{ asset_scope }} · 核准後建立公司財產</span></div>
+</div>
+<div class="two-col">
+  <div>
+    <section class="panel">
+      <div class="panel-head"><div><h2>優先關注的簽呈</h2><p>依急件、密件、普通件排序</p></div><a class="text-link" href="{% url 'approval_list' %}">全部簽呈{% include "includes/icon.html" with name="arrow" %}</a></div>
+      <div class="table-wrap">
+        <table class="responsive-table">
+          <thead><tr><th>簽呈編號</th><th>主旨</th><th>目前進度</th><th>操作</th></tr></thead>
+          <tbody>
+          {% for approval in priority_approvals %}
+            <tr>
+              <td class="title-cell"><code>{{ approval.case_no }}</code><span class="mobile-only"><span class="badge status-{{ approval.status }}">{{ approval.get_status_display }}</span></span></td>
+              <td class="primary-cell"><strong>{{ approval.subject }}</strong><span class="sub">{{ approval.department.name }} · {{ approval.document_short }}</span></td>
+              <td data-label="目前進度"><span class="badge status-{{ approval.status }}">{{ approval.get_status_display }}</span></td>
+              <td class="action-cell"><a class="text-link" href="{% url 'approval_detail' approval.pk %}">查看簽呈{% include "includes/icon.html" with name="arrow" %}</a></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4"><div class="empty"><h3>目前沒有簽核中的案件</h3><p>新的簽呈送出後會出現在這裡。</p></div></td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if priority_approvals %}<div class="table-foot"><span>共 {{ priority_approvals|length }} 筆待關注</span><span>依權限顯示</span></div>{% endif %}
+    </section>
+    <section class="panel">
+      <div class="panel-head"><div><h2>快速建立申請</h2><p>選擇需要的表單，開始新的申請</p></div></div>
+      <div class="quick-grid">
+        {% if can_apply %}
+        <a class="quick" href="{% url 'supply_create' %}">{% include "includes/icon.html" with name="pen" %}<span>用品申請<small>日常辦公需求</small></span></a>
+        <a class="quick" href="{% url 'equipment_create' %}">{% include "includes/icon.html" with name="screen" %}<span>設備申請<small>設備與規格需求</small></span></a>
+        {% elif can_manage %}
+        <a class="quick" href="{% url 'supplies' %}">{% include "includes/icon.html" with name="pen" %}<span>用品申請<small>處理全公司案件</small></span></a>
+        <a class="quick" href="{% url 'equipment_procurement' %}">{% include "includes/icon.html" with name="screen" %}<span>設備申請<small>安排採購與轉發</small></span></a>
+        {% endif %}
+        {% if can_apply_registration %}
+        <a class="quick" href="{% url 'registration_create' %}">{% include "includes/icon.html" with name="box" %}<span>資產登記<small>新購與異動申請</small></span></a>
+        {% elif can_manage_assets %}
+        <a class="quick" href="{% url 'registration_list' %}">{% include "includes/icon.html" with name="box" %}<span>資產登記<small>審核登記與異動</small></span></a>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+  <div>
+    <section class="panel">
+      <div class="panel-head"><div><h2>最近更新</h2><p>依你能查看的案件整理</p></div></div>
+      <div class="panel-body">
+        {% for item in activities %}
+        <a class="activity" href="{{ item.url }}"><span class="activity-icon">{% include "includes/icon.html" with name=item.kind %}</span><div><p>{{ item.text }}</p><small>{{ item.when|date:"Y/m/d H:i" }} · 台北時間</small></div></a>
+        {% empty %}
+        <p class="muted">目前沒有最近更新。</p>
+        {% endfor %}
+      </div>
+    </section>
+    <div class="note-card">
+      {% include "includes/icon.html" with name="shield" %}
+      <h3>每一次交付，都有跡可循。</h3>
+      <p>從申請、跨部門協作到簽核，讓採購進度與資產資料保持清晰。</p>
+      <div class="divider"></div>
+      <a class="text-link" href="{% url 'asset_list' %}">前往財產清冊{% include "includes/icon.html" with name="arrow" %}</a>
+    </div>
+  </div>
 </div>
 {% endblock %}

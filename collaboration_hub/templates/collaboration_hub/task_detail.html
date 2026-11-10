@@ -1,1 +1,9 @@
-{% extends "base.html" %}{% load static %}{% block title %}協作案件 {{ task.case_no }} — 品嘉平台{% endblock %}{% block extra_head %}<link rel="stylesheet" href="{% static 'procurement/supply.css' %}"><link rel="stylesheet" href="{% static 'collaboration_hub/collaboration.css' %}">{% endblock %}{% block content %}<section class="collaboration-page"><a class="collaboration-back" href="{% url 'collaboration_task_list' %}">← 返回協作案件</a>{% include "collaboration_hub/_task_detail_content.html" %}</section>{% endblock %}
+{% extends "base.html" %}
+{% block title %}協作案件 {{ task.case_no }}｜品嘉建設集團{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><p class="eyebrow">協作專區</p><h1>協作案件 {{ task.case_no }}</h1><p class="subtitle">來自「{{ task.get_source_form_display }}」{{ task.source_case_no }}</p></div>
+  <div class="actions"><a class="btn secondary" href="{% url 'collaboration_task_list' %}">返回協作案件</a></div>
+</div>
+{% include "collaboration_hub/_task_detail_content.html" %}
+{% endblock %}

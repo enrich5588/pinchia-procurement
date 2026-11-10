@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}{{ form_title }} — 品嘉平台{% endblock %}
-{% block extra_head %}
-<link rel="stylesheet" href="{% static 'assets/asset-form.css' %}?v=20261109-1">
-<link rel="stylesheet" href="{% static 'assets/registration.css' %}?v=20260917-2">
-<script src="{% static 'assets/asset-form.js' %}?v=20261022-2" defer></script>
+{% block title %}{{ form_title }}｜品嘉建設集團{% endblock %}
+{% block extra_head %}<script src="{% static 'assets/asset-form.js' %}" defer></script>{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><p class="eyebrow">資產管理</p><h1>{{ form_title }}</h1><p class="subtitle">新購財產與資料異動，統一送審、核准入冊。</p></div>
+  <div class="actions"><a class="btn secondary" href="{% url 'registration_list' %}">返回資產登記</a></div>
+</div>
+{% include "assets/_registration_form.html" %}
 {% endblock %}
-{% block content %}<div class="card asset-form-card">{% include "assets/_registration_form.html" %}</div>{% endblock %}

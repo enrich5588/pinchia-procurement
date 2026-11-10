@@ -20,14 +20,20 @@
   const selectAll = document.querySelector("[data-bulk-select-all]");
   const buttons = [...document.querySelectorAll("[data-bulk-submit]")];
   if (!selectAll) return;
+  const shown = () => checkboxes.filter((checkbox) => !checkbox.closest("tr")?.hidden);
   const update = () => {
-    const checked = checkboxes.filter((checkbox) => checkbox.checked).length;
+    const visible = shown();
+    const checked = visible.filter((checkbox) => checkbox.checked).length;
     buttons.forEach((button) => { button.disabled = checked === 0; });
-    selectAll.checked = checked > 0 && checked === checkboxes.length;
-    selectAll.indeterminate = checked > 0 && checked < checkboxes.length;
+    selectAll.checked = visible.length > 0 && checked === visible.length;
+    selectAll.indeterminate = checked > 0 && checked < visible.length;
+    const bar = document.querySelector("[data-bulk-bar]");
+    if (bar) bar.hidden = checked === 0;
+    const count = document.querySelector("[data-bulk-count]");
+    if (count) count.textContent = `已選取 ${checked} 筆`;
   };
   selectAll.addEventListener("change", () => {
-    checkboxes.forEach((checkbox) => { checkbox.checked = selectAll.checked; });
+    shown().forEach((checkbox) => { checkbox.checked = selectAll.checked; });
     update();
   });
   checkboxes.forEach((checkbox) => checkbox.addEventListener("change", update));
