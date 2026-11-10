@@ -1,0 +1,21 @@
+<div class="approval-modal-content">
+  <header class="approval-modal-header">
+    <p class="approval-eyebrow">{{ approval.case_no }}</p>
+    <h2>{% if approve %}核准簽呈{% else %}退回簽呈{% endif %}</h2>
+    <p>{{ approval.subject }} · {{ approval.get_amount_range_display }}</p>
+  </header>
+  <form method="post" action="{{ form_action }}" data-approval-decision-form>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="approval-form-error">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="approval-field">
+      <label for="{{ form.comment.id_for_label }}">{{ form.comment.label }}（選填）</label>
+      {{ form.comment }}
+      {% for error in form.comment.errors %}<small class="approval-error">{{ error }}</small>{% endfor %}
+    </div>
+    {% if not approve %}<p class="approval-warning">退回後此簽呈將立即結案，後續簽核關卡不再進行。</p>{% endif %}
+    <div class="approval-form-actions">
+      <button type="submit" class="{% if not approve %}danger{% endif %}">確認{% if approve %}核准{% else %}退回{% endif %}</button>
+      <button type="button" class="secondary" data-approval-decision-close>取消</button>
+    </div>
+  </form>
+</div>

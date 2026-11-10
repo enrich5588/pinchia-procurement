@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}批量核准資產登記 — 品嘉平台{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'assets/asset-form.css' %}?v=20261109-1"><link rel="stylesheet" href="{% static 'assets/registration.css' %}">{% endblock %}
+{% block content %}<section class="card asset-form-card bulk-approval-page"><h1>批量核准資產登記</h1><p>請為每一筆申請填寫唯一的財產編號。送出後會一次建立全部資產；任一筆失敗時整批不會建立。</p>
+  <form method="post" action="{% url 'registration_bulk_approve' %}">{% csrf_token %}<input type="hidden" name="commit" value="1">{{ formset.management_form }}{{ formset.non_form_errors }}
+    <div class="bulk-asset-list">{% for row_form, registration in rows %}<article class="bulk-asset-row">{{ row_form.registration_id }}<div><span>案件編號</span><strong>{{ registration.case_no|default:"無法讀取" }}</strong></div><div><span>財產名稱</span><strong>{{ registration.name|default:"—" }}</strong></div><div><span>所屬部門</span><strong>{{ registration.department.name|default:"—" }}</strong></div><div class="asset-form-field"><label for="{{ row_form.asset_no.id_for_label }}">財產編號 *</label>{{ row_form.asset_no }}{{ row_form.asset_no.errors }}</div></article>{% endfor %}</div>
+    <div class="asset-form-actions"><button type="submit">建立全部資產並核准</button><a href="{% url 'registration_list' %}">取消</a></div>
+  </form></section>
+{% endblock %}

@@ -1,0 +1,40 @@
+<div class="asset-form-content">
+  <h2 id="asset-modal-title">申請 {{ registration.case_no }}</h2>
+  <p><span class="registration-status status-{{ registration.status }}">{{ registration.get_status_display }}</span></p>
+  {% if registration.target_asset %}<p class="registration-revision-notice">此案件為財產 {{ registration.target_asset.asset_no }} 的異動申請；核准前清冊資料維持不變。</p>{% endif %}
+  <dl class="registration-detail-grid">
+    <div><dt>財產名稱</dt><dd>{{ registration.name }}</dd></div>
+    <div><dt>公司</dt><dd>{{ registration.get_company_display }}</dd></div>
+    <div><dt>財產類別</dt><dd>{{ registration.category }}</dd></div>
+    <div><dt>廠牌</dt><dd>{{ registration.brand|default:"尚未填寫" }}</dd></div>
+    <div><dt>財產規格型號</dt><dd>{{ registration.specification }}</dd></div>
+    <div><dt>配件</dt><dd>{{ registration.accessories|default:"—"|linebreaksbr }}</dd></div>
+    <div><dt>數量</dt><dd>{{ registration.quantity }}</dd></div>
+    <div><dt>單價</dt><dd>{% if registration.unit_price is not None %}{{ registration.unit_price|floatformat:2 }}{% else %}—{% endif %}</dd></div>
+    <div><dt>營業稅</dt><dd>{% if registration.business_tax is not None %}{{ registration.business_tax|floatformat:2 }}{% else %}—{% endif %}</dd></div>
+    <div><dt>合計</dt><dd><strong>{{ registration.total|floatformat:2 }}</strong></dd></div>
+    <div><dt>所屬部門</dt><dd>{{ registration.department.name }}</dd></div>
+    <div><dt>保管人員</dt><dd>{% if registration.custodian %}{{ registration.custodian.username }}{% else %}部門資產（共用資源）{% endif %}</dd></div>
+    <div><dt>採購日期</dt><dd>{{ registration.purchase_date|date:"Y/m/d" }}</dd></div>
+    <div><dt>使用年限</dt><dd>{% if registration.useful_life_years %}{{ registration.useful_life_years }} 年{% else %}—{% endif %}</dd></div>
+    <div><dt>備註（保固期限等）</dt><dd>{{ registration.notes|default:"—"|linebreaksbr }}</dd></div>
+    {% if registration.asset %}<div><dt>財產編號</dt><dd>{{ registration.asset.asset_no }}</dd></div>{% endif %}
+    {% if registration.target_asset %}<div><dt>異動財產編號</dt><dd>{{ registration.target_asset.asset_no }}</dd></div>{% endif %}
+  </dl>
+  {% include "assets/_registration_images.html" with images=registration.images.all %}
+  {% if registration.asset_images_to_remove.exists %}
+    <section class="asset-image-section" aria-label="申請移除的圖片">
+      <h3>核准後移除的現有圖片</h3>
+      <div class="asset-image-grid">
+        {% for photo in registration.asset_images_to_remove.all %}
+          {% if photo.asset_id %}
+            <a href="{% url 'asset_image' photo.pk %}" target="_blank" rel="noopener" class="asset-image-item"><img src="{% url 'asset_image' photo.pk %}" alt="申請移除的圖片 {{ forloop.counter }}" loading="lazy"></a>
+          {% elif photo.registration_id %}
+            <a href="{% url 'registration_image' photo.pk %}" target="_blank" rel="noopener" class="asset-image-item"><img src="{% url 'registration_image' photo.pk %}" alt="申請移除的圖片 {{ forloop.counter }}" loading="lazy"></a>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+  {% if is_modal %}<div class="asset-form-actions"><button type="button" class="asset-secondary-action" data-modal-close>關閉</button></div>{% endif %}
+</div>

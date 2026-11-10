@@ -1,0 +1,22 @@
+.registration-status { display: inline-flex; padding: .28rem .65rem; border-radius: 999px; font-weight: 700; font-size: .82rem; white-space: nowrap; }
+.status-pending { color: #8a5800; background: #fff2c7; }
+.status-returned { color: #9d2d20; background: #ffe0dc; }
+.status-approved { color: #176b42; background: #d8f5e6; }
+.status-cancelled { color: #59636f; background: #e9edf1; }
+.registration-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.registration-actions form { margin: 0; }
+.registration-actions a, .registration-actions button { border: 0; border-radius: .45rem; padding: .42rem .65rem; font: inherit; font-size: .82rem; cursor: pointer; text-decoration: none; background: #edf2f7; color: #26364a; }
+.registration-actions .registration-approve { color: white; background: #16835d; }
+.registration-actions .registration-return, .registration-actions .registration-cancel { color: #9d2d20; background: #fff0ed; }
+.registration-confirm-modal { border: 0; border-radius: 1rem; padding: 1.5rem; max-width: 28rem; box-shadow: 0 24px 70px #15243b55; }
+.registration-confirm-modal::backdrop { background: #15243b99; }
+.registration-confirm-modal h2 { margin-top: 0; }
+.registration-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.25rem 0; }
+.registration-detail-grid div { padding: .85rem; border-radius: .7rem; background: #f5f7fa; }
+.registration-detail-grid dt { color: #687586; font-size: .82rem; }
+.registration-detail-grid dd { margin: .25rem 0 0; font-weight: 600; overflow-wrap: anywhere; }
+@media (max-width: 700px) { .registration-detail-grid { grid-template-columns: 1fr; } }
+.registration-bulk-actions{display:flex;gap:7px}.registration-bulk-actions button{background:var(--primary);border:0;border-radius:7px;color:white;cursor:pointer;font-weight:700;min-height:38px;padding:0 12px}.registration-bulk-actions button.danger{background:#9d2d20}.registration-bulk-actions button:disabled{cursor:not-allowed;opacity:.45}
+.bulk-approval-page{max-width:1000px;margin:0 auto}.bulk-approval-page>h1{margin-top:0}.bulk-asset-list{display:grid;gap:10px;margin:20px 0}.bulk-asset-row{align-items:end;background:var(--surface-muted);border:1px solid var(--border);border-radius:10px;display:grid;grid-template-columns:1fr 1.5fr 1fr 1.2fr;gap:12px;padding:14px}.bulk-asset-row>div{display:grid}.bulk-asset-row span{color:var(--text-muted);font-size:.72rem}@media(max-width:760px){.bulk-asset-row{grid-template-columns:1fr 1fr}}@media(max-width:480px){.bulk-asset-row{grid-template-columns:1fr}}
+.registration-type-badge{background:var(--warning-soft);border-radius:999px;color:var(--warning);display:inline-flex;font-size:.68rem;font-weight:700;margin-left:7px;padding:3px 7px;white-space:nowrap}
+.registration-revision-notice{background:var(--warning-soft);border-radius:8px;color:var(--text);font-size:.86rem;padding:11px 13px}

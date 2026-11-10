@@ -1,0 +1,21 @@
+<div class="collaboration-forward-content">
+  <h2 id="collaboration-forward-title">轉發設備需求</h2>
+  <p>設備申請 <code>{{ application.case_no }}</code> 將建立一筆新的協作案件，並交由指定部門處理。</p>
+  <dl class="collaboration-source-preview">
+    <div><dt>來源部門</dt><dd>{{ application.department.name }}</dd></div>
+    <div><dt>申請人</dt><dd>{{ application.applicant.username }}</dd></div>
+    <div><dt>需求日期</dt><dd>{{ application.need_date|date:"Y/m/d" }}</dd></div>
+  </dl>
+  <form method="post" action="{{ form_action }}" data-collaboration-forward-form>
+    {% csrf_token %}{{ form.non_field_errors }}
+    <div class="collaboration-form-field">
+      <label for="{{ form.assigned_department.id_for_label }}">{{ form.assigned_department.label }} *</label>
+      {{ form.assigned_department }}{{ form.assigned_department.errors }}
+    </div>
+    <p class="collaboration-forward-note">發送後，原設備申請會自動進入「處理中」。</p>
+    <div class="supply-form-actions">
+      <button type="submit">發送任務</button>
+      {% if is_modal %}<button type="button" class="secondary" data-collaboration-forward-close>取消</button>{% else %}<a href="{% url 'equipment_procurement' %}">取消</a>{% endif %}
+    </div>
+  </form>
+</div>

@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}{{ approval.case_no }} — 品嘉平台{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'approval_hub/approval.css' %}?v=20260903-2"><script src="{% static 'approval_hub/approval.js' %}?v=20260903-2" defer></script>{% endblock %}
+{% block content %}<section class="card approval-standalone">{% include "approval_hub/_approval_detail.html" %}</section>
+<dialog class="approval-modal" data-approval-main-modal><div class="approval-modal-shell"><button type="button" class="approval-close" data-approval-modal-close aria-label="關閉">×</button><div data-approval-main-body><p>正在載入…</p></div></div></dialog>
+<dialog class="approval-modal approval-decision-modal" data-approval-decision-modal><div class="approval-modal-shell"><button type="button" class="approval-close" data-approval-decision-close aria-label="關閉">×</button><div data-approval-decision-body><p>正在載入…</p></div></div></dialog>
+<dialog class="approval-confirm" data-approval-withdraw-confirm><form method="post" data-approval-withdraw-form>{% csrf_token %}<h2>確認撤回簽呈</h2><p>確定撤回簽呈 <strong data-approval-withdraw-case></strong> 嗎？撤回後簽核流程會立即結案。</p><div class="approval-form-actions"><button type="submit" class="danger">確認撤回</button><button type="button" class="secondary" data-approval-withdraw-close>返回</button></div></form></dialog>{% endblock %}

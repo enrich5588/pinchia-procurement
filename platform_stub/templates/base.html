@@ -1,0 +1,68 @@
+{% load asset_permissions %}
+{% comment %}
+主平台版面的極簡替身。你的頁面一律 {% extends "base.html" %} 並填 content block,
+整合時樣式自動換成主站的 —— 所以這裡只給結構,不要在你的 template 裡寫死顏色字型。
+{% endcomment %}
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}品嘉平台(開發環境){% endblock %}</title>
+  <style>
+    :root{
+      --surface:#fff;--surface-muted:#f7f5f1;--surface-accent:#f1ece2;
+      --text:#25231f;--text-muted:#706b62;--border:#ded9d0;
+      --primary:#315c4b;--primary-strong:#244638;--primary-soft:#e4eee9;
+      --info:#315c86;--info-soft:#e8f0f7;--warning:#8b5e16;--warning-soft:#f7edda;
+      --danger:#a33;
+      --neutral-soft:#efede8;--shadow:0 12px 32px rgba(52,45,34,.08);
+      --overlay:rgba(24,27,25,.52);
+      --radius:12px;
+    }
+    body{font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;margin:0;
+         display:grid;grid-template-columns:200px minmax(0,1fr);min-height:100vh;
+         color:var(--text);background:var(--surface-muted)}
+    nav{background:var(--surface-accent);padding:16px;border-right:1px solid var(--border)}
+    nav a{display:block;padding:6px 8px;color:var(--text);text-decoration:none;border-radius:5px}
+    nav a:hover{background:var(--surface)}
+    main{padding:28px;min-width:0}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+    .messages li{color:var(--danger)}
+    button{min-height:40px;padding:0 16px}
+    @media(max-width:720px){
+      body{display:block}nav{border-right:0;border-bottom:1px solid var(--border)}main{padding:16px}
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+<nav>
+  <p><b>品嘉平台</b><br><small>stub 開發環境</small></p>
+  {% if user.is_authenticated %}
+    <a href="/">首頁</a>
+    <p><b>採購申請專區</b></p>
+    <a href="{% url 'supplies' %}">辦公用品申請</a>
+    <a href="{% url 'equipment_procurement' %}">設備申請</a>
+    <p><b>資產專區</b></p>
+    <a href="{% url 'asset_list' %}">財產清冊</a>
+    <a href="{% url 'registration_list' %}">資產登記</a>
+    <p><b>協作專區</b></p>
+    <a href="{% url 'collaboration_task_list' %}">協作案件</a>
+    <p><b>簽核專區</b></p>
+    <a href="{% url 'approval_list' %}">數位簽呈</a>
+    {% can_monitor_database user as show_database_monitor %}
+    {% if show_database_monitor %}<a href="{% url 'database_monitor' %}" target="_blank" rel="noopener">資料庫監看 ↗</a>{% endif %}
+    <p><small>{{ user.username }}</small></p>
+    <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+      <button type="submit">登出</button></form>
+  {% else %}
+    <a href="{% url 'login' %}">登入</a>
+  {% endif %}
+</nav>
+<main>
+  {% if messages %}<ul class="messages">{% for m in messages %}<li>{{ m }}</li>{% endfor %}</ul>{% endif %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

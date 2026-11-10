@@ -1,0 +1,8 @@
+.supply-stats{grid-template-columns:repeat(5,1fr)}
+.status-processing{background:var(--info-soft);color:var(--info)}
+.supply-actions .processing{background:var(--info);color:white}
+.supply-list-heading{align-items:center;display:flex;justify-content:space-between;gap:12px}.supply-bulk-actions{display:flex;gap:7px}.supply-bulk-actions button{background:var(--primary);border:0;border-radius:7px;color:white;cursor:pointer;font-weight:700;min-height:38px;padding:0 12px}.supply-bulk-actions button.danger{background:#9d2d20}.supply-bulk-actions button:disabled{cursor:not-allowed;opacity:.45}
+.supply-bulk-actions button.processing{background:var(--info)}
+@media(max-width:1000px){.supply-stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){.supply-stats{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.supply-stats{grid-template-columns:1fr}}

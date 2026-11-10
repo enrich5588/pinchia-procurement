@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h1>登入</h1>
+  <p>請使用公司 Microsoft 365 帳號登入，系統將同步您的所屬部門。</p>
+  {% if m365_ready %}
+  <form method="post" action="{% url 'microsoft_login' %}">{% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit">使用公司 M365 帳號登入</button>
+  </form>
+  {% else %}
+  <p role="status">{{ m365_problem }}</p>
+  <button type="button" disabled>使用公司 M365 帳號登入</button>
+  {% endif %}
+  {% if allow_local_login %}
+  <details>
+    <summary>開發／維護用本機登入</summary>
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+      {{ form.as_p }}
+      <button type="submit">本機登入</button>
+    </form>
+  </details>
+  {% endif %}
+</div>
+{% endblock %}

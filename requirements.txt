@@ -1,0 +1,6 @@
+Django==5.2.5
+Pillow==12.3.0
+openpyxl==3.1.5
+msal==1.39.0
+requests==2.34.2
+PyJWT[crypto]==2.15.1

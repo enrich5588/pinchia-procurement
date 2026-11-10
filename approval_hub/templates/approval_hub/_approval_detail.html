@@ -1,0 +1,31 @@
+<article class="approval-detail">
+  <header class="approval-detail-header">
+    <div><p class="approval-eyebrow">{{ approval.case_no }}</p><h2>{{ approval.subject }}</h2><p>{{ approval.department.name }} · {{ approval.applicant.username }} · {{ approval.created_at|date:"Y/m/d H:i" }}</p></div>
+    <span class="approval-status status-{{ approval.status }}">{{ approval.get_status_display }}</span>
+  </header>
+  <dl class="approval-detail-grid">
+    <div><dt>涉及金額</dt><dd>{{ approval.get_amount_range_display }}</dd></div>
+    <div><dt>公文種類</dt><dd>{{ approval.get_document_type_display|default:"未選擇" }}</dd></div>
+    <div><dt>目前進度</dt><dd>{% if approval.status == "pending" %}第 {{ approval.current_step }}／{{ progress_total }} 關{% elif approval.status == "approved" %}{{ progress_total }}／{{ progress_total }} 關完成{% else %}已結案{% endif %}</dd></div>
+    <div><dt>目前關卡送達時間</dt><dd>{{ approval.delivered_at|date:"Y/m/d H:i" }}</dd></div>
+    <div><dt>最後更新</dt><dd>{{ approval.updated_at|date:"Y/m/d H:i" }} · {{ approval.updated_by.username }}</dd></div>
+  </dl>
+  <div class="approval-progress approval-progress-large" aria-label="已完成 {{ progress_done }}／{{ progress_total }} 關"><i style="width:{{ progress_percent }}%"></i></div>
+  <section class="approval-content-block"><h3>簽呈內容</h3><p>{{ approval.content|linebreaksbr }}</p></section>
+  <section class="approval-timeline-block">
+    <h3>簽核歷程</h3>
+    {% regroup steps by round_number as approval_rounds %}
+    {% for round in approval_rounds %}<div class="approval-round"><h4>第 {{ round.grouper }} 次送簽{% if round.grouper == approval.revision %}（目前版本）{% endif %}</h4>
+    <ol class="approval-timeline">
+      {% for step in round.list %}
+        <li class="step-{{ step.status }}">
+          <span class="approval-step-index">{{ step.sequence }}</span>
+          <div><strong>{{ step.approver.username }}</strong><small>{{ step.get_status_display }}{% if step.acted_at %} · {{ step.acted_at|date:"Y/m/d H:i" }}{% endif %}</small>{% if step.comment %}<p>{{ step.comment }}</p>{% endif %}</div>
+        </li>
+      {% endfor %}
+    </ol></div>{% endfor %}
+  </section>
+  {% if can_act %}<div class="approval-detail-actions"><a href="{% url 'approval_approve' approval.pk %}" data-approval-decision-url="{% url 'approval_approve' approval.pk %}">核准</a><a href="{% url 'approval_return' approval.pk %}" class="danger-outline" data-approval-decision-url="{% url 'approval_return' approval.pk %}">退回</a></div>{% endif %}
+  {% if can_withdraw %}<div class="approval-detail-actions muted"><button type="button" class="danger-outline" data-approval-withdraw-url="{% url 'approval_withdraw' approval.pk %}" data-approval-case-no="{{ approval.case_no }}">撤回簽呈</button></div>{% endif %}
+  {% if can_resubmit %}<div class="approval-detail-actions muted"><button type="button" data-approval-create-url="{% url 'approval_resubmit' approval.pk %}">修改並重新送簽</button></div>{% endif %}
+</article>

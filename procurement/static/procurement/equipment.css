@@ -1,0 +1,2 @@
+.equipment-item-row { grid-template-columns: minmax(15rem, 1fr) minmax(7rem, .3fr) auto; }
+@media (max-width: 760px) { .equipment-item-row { grid-template-columns: 1fr; } }

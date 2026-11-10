@@ -1,0 +1,58 @@
+<div class="asset-form-content" data-asset-form-content>
+  <h2 id="asset-modal-title">{{ form_title }}</h2>
+  {% include "assets/_registration_images.html" with images=form.registration_images %}
+  {% if form.requested_image_removals %}
+    <section class="asset-image-section" aria-label="申請移除的圖片">
+      <h3>申請移除的現有圖片</h3>
+      <p>核准後，下列圖片將從財產清冊移除。</p>
+      <div class="asset-image-grid">
+        {% for photo in form.requested_image_removals %}
+          <a href="{% url 'asset_image' photo.pk %}" target="_blank" rel="noopener" class="asset-image-item"><img src="{% url 'asset_image' photo.pk %}" alt="申請移除的圖片 {{ forloop.counter }}" loading="lazy"></a>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+  <p>標示 * 的欄位為必填。{% if is_edit %}財產編號建立後不可修改。{% endif %}</p>
+  <form method="post" enctype="multipart/form-data" action="{{ form_action }}" data-asset-form data-number-check-url="{% url 'asset_number_check' %}">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      {% if field.name == "remove_images" %}
+        {% if field.field.queryset.exists %}
+          <fieldset class="asset-image-section">
+            <legend>現有圖片</legend>
+            <p>{{ field.help_text }}</p>
+            <div class="asset-image-grid">
+              {% for photo in field.field.queryset %}
+                <div class="asset-image-item">
+                  <a href="{% url 'asset_image' photo.pk %}" target="_blank" rel="noopener"><img src="{% url 'asset_image' photo.pk %}" alt="{{ form.instance.name }} 圖片 {{ forloop.counter }}" loading="lazy"></a>
+                  <label><input type="checkbox" name="remove_images" value="{{ photo.pk }}"{% if photo.pk|stringformat:"s" in field.value %} checked{% endif %}> 移除圖片 {{ forloop.counter }}</label>
+                </div>
+              {% endfor %}
+            </div>
+          </fieldset>
+        {% endif %}
+        {{ field.errors }}
+      {% else %}
+      <div class="asset-form-field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+        {{ field }}
+        {% if field.name == "asset_no" and not is_edit %}
+          <span class="asset-number-status" data-number-status aria-live="polite"></span>
+        {% endif %}
+        {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+        {{ field.errors }}
+        {% if field.name == "images" %}<div class="asset-image-grid" data-image-preview aria-live="polite"></div>{% endif %}
+      </div>
+      {% endif %}
+    {% endfor %}
+    <div class="asset-form-actions">
+      <button type="submit">{{ submit_label }}</button>
+      {% if is_modal %}
+        <button type="button" class="asset-secondary-action" data-modal-close>取消</button>
+      {% else %}
+        <a href="{% url 'asset_list' %}">取消</a>
+      {% endif %}
+    </div>
+  </form>
+</div>

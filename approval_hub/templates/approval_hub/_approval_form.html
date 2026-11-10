@@ -1,0 +1,36 @@
+<div class="approval-modal-content">
+  <header class="approval-modal-header">
+    <p class="approval-eyebrow">{{ form_eyebrow }}</p>
+    <h2>{{ form_title }}</h2>
+    <p>{{ form_description }}</p>
+  </header>
+  <form method="post" action="{{ form_action }}" data-approval-form>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="approval-form-error">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="approval-readonly-grid">
+      <div><span>申請部門</span><strong>{{ department.name }}</strong></div>
+      <div><span>申請人</span><strong>{{ request.user.username }}</strong></div>
+    </div>
+    {% for field in form %}
+      <div class="approval-field{% if field.errors %} has-error{% endif %}{% if field.name == 'amount_range' or field.name == 'document_type' %} approval-choice-field{% endif %}">
+        <label{% if field.id_for_label %} for="{{ field.id_for_label }}"{% endif %}>{{ field.label }} {% if field.field.required %}<b>*</b>{% else %}<small>（選填）</small>{% endif %}</label>
+        {{ field }}
+        {% for error in field.errors %}<small class="approval-error">{{ error }}</small>{% endfor %}
+      </div>
+    {% endfor %}
+    <section class="approval-route-preview" aria-live="polite">
+      <span>預計簽核路徑</span>
+      <strong data-approval-route>請選擇涉及金額</strong>
+      <small>系統會依送出當下選擇的金額級距與有效帳號建立固定關卡。</small>
+    </section>
+    {{ route_rules|json_script:"approval-route-rules" }}
+    <details class="approval-rule-details">
+      <summary>查看金額簽核規則</summary>
+      <ul>{% for rule in route_rules %}<li><span>{{ rule.label }}</span><strong>{{ rule.route }}</strong></li>{% endfor %}</ul>
+    </details>
+    <div class="approval-form-actions">
+      <button type="submit">{{ submit_label }}</button>
+      <button type="button" class="secondary" data-approval-modal-close>取消</button>
+    </div>
+  </form>
+</div>

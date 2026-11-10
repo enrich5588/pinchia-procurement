@@ -1,0 +1,10 @@
+{% if images %}
+<section class="asset-image-section" aria-label="申請圖片">
+  <h3>申請圖片</h3>
+  <div class="asset-image-grid">
+    {% for photo in images %}
+      <a href="{% url 'registration_image' photo.pk %}" target="_blank" rel="noopener" class="asset-image-item"><img src="{% url 'registration_image' photo.pk %}" alt="申請圖片 {{ forloop.counter }}" loading="lazy"></a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}

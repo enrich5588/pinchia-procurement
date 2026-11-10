@@ -1,0 +1,1 @@
+{% extends "base.html" %}{% load static %}{% block title %}用品申請 {{ application.case_no }} — 品嘉平台{% endblock %}{% block extra_head %}<link rel="stylesheet" href="{% static 'procurement/supply.css' %}">{% endblock %}{% block content %}<div class="card supply-form-card">{% include "procurement/_supply_detail.html" %}</div>{% endblock %}

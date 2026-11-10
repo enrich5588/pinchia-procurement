@@ -1,0 +1,4 @@
+<nav class="procurement-tabs" aria-label="採購申請專區分頁">
+  <a href="{% url 'supplies' %}"{% if active_procurement_tab == "supplies" %} class="is-active" aria-current="page"{% endif %}>辦公用品申請</a>
+  <a href="{% url 'equipment_procurement' %}"{% if active_procurement_tab == "equipment" %} class="is-active" aria-current="page"{% endif %}>設備申請</a>
+</nav>

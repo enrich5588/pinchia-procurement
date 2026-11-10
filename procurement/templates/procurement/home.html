@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h1>你好,{{ user.username }}</h1>
+  <p>部門:{{ dept|default:"未設定部門" }}</p>
+  <p>請從側欄選擇採購申請、資產管理、協作案件或數位簽呈。</p>
+</div>
+{% endblock %}

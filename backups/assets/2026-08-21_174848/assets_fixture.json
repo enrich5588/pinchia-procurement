@@ -1,0 +1,287 @@
+[
+{
+  "model": "assets.asset",
+  "pk": 1,
+  "fields": {
+    "asset_no": "PINA00001",
+    "name": "電腦主機",
+    "category": "it_equipment",
+    "specification": "自組",
+    "department": 1,
+    "custodian": 1,
+    "purchase_date": "2026-08-04",
+    "useful_life_years": 5,
+    "notes": "保固至2029/08/03",
+    "created_by": 3,
+    "created_at": "2026-08-20T10:22:20.958Z",
+    "updated_by": 3,
+    "updated_at": "2026-08-21T07:10:08.418Z"
+  }
+},
+{
+  "model": "assets.asset",
+  "pk": 2,
+  "fields": {
+    "asset_no": "PINA00002",
+    "name": "電腦螢幕",
+    "category": "it_equipment",
+    "specification": "27吋",
+    "department": 1,
+    "custodian": 1,
+    "purchase_date": "2026-08-04",
+    "useful_life_years": 5,
+    "notes": "保固至2027/08/03",
+    "created_by": 3,
+    "created_at": "2026-08-20T10:47:22.251Z",
+    "updated_by": 3,
+    "updated_at": "2026-08-21T07:10:08.418Z"
+  }
+},
+{
+  "model": "assets.asset",
+  "pk": 3,
+  "fields": {
+    "asset_no": "PINA00003",
+    "name": "辦公桌",
+    "category": "furniture",
+    "specification": "150公分",
+    "department": 1,
+    "custodian": 1,
+    "purchase_date": "2026-04-03",
+    "useful_life_years": 10,
+    "notes": "",
+    "created_by": 3,
+    "created_at": "2026-08-20T10:49:31.788Z",
+    "updated_by": 3,
+    "updated_at": "2026-08-21T07:10:08.418Z"
+  }
+},
+{
+  "model": "assets.asset",
+  "pk": 4,
+  "fields": {
+    "asset_no": "PINA00004",
+    "name": "辦公椅",
+    "category": "furniture",
+    "specification": "",
+    "department": 1,
+    "custodian": 1,
+    "purchase_date": "2026-04-03",
+    "useful_life_years": 10,
+    "notes": "",
+    "created_by": 3,
+    "created_at": "2026-08-20T10:50:22.995Z",
+    "updated_by": 3,
+    "updated_at": "2026-08-21T07:10:08.418Z"
+  }
+},
+{
+  "model": "assets.asset",
+  "pk": 5,
+  "fields": {
+    "asset_no": "PINA00005",
+    "name": "置物櫃",
+    "category": "furniture",
+    "specification": "5層開放是置物櫃",
+    "department": 1,
+    "custodian": 1,
+    "purchase_date": "2025-02-06",
+    "useful_life_years": 10,
+    "notes": "",
+    "created_by": 3,
+    "created_at": "2026-08-20T10:51:28.756Z",
+    "updated_by": 3,
+    "updated_at": "2026-08-21T07:10:08.418Z"
+  }
+},
+{
+  "model": "assets.asset",
+  "pk": 6,
+  "fields": {
+    "asset_no": "PINA00006",
+    "name": "電腦主機",
+    "category": "it_equipment",
+    "specification": "ASUS001",
+    "department": 2,
+    "custodian": 2,
+    "purchase_date": "2026-02-17",
+    "useful_life_years": 5,
+    "notes": "",
+    "created_by": 3,
+    "created_at": "2026-08-20T10:53:43.728Z",
+    "updated_by": 3,
+    "updated_at": "2026-08-21T07:10:08.418Z"
+  }
+},
+{
+  "model": "assets.asset",
+  "pk": 7,
+  "fields": {
+    "asset_no": "PINA00007",
+    "name": "電腦螢幕",
+    "category": "it_equipment",
+    "specification": "27吋",
+    "department": 2,
+    "custodian": 2,
+    "purchase_date": "2026-02-18",
+    "useful_life_years": 5,
+    "notes": "",
+    "created_by": 3,
+    "created_at": "2026-08-20T10:57:35.565Z",
+    "updated_by": 3,
+    "updated_at": "2026-08-21T07:10:08.418Z"
+  }
+},
+{
+  "model": "assets.asset",
+  "pk": 8,
+  "fields": {
+    "asset_no": "PINA00008",
+    "name": "辦公桌",
+    "category": "furniture",
+    "specification": "120公分",
+    "department": 2,
+    "custodian": 2,
+    "purchase_date": "2022-06-15",
+    "useful_life_years": 10,
+    "notes": "",
+    "created_by": 3,
+    "created_at": "2026-08-21T01:28:00.198Z",
+    "updated_by": 3,
+    "updated_at": "2026-08-21T07:10:08.418Z"
+  }
+},
+{
+  "model": "assets.asset",
+  "pk": 9,
+  "fields": {
+    "asset_no": "PINA00009",
+    "name": "辦公椅",
+    "category": "furniture",
+    "specification": "",
+    "department": 2,
+    "custodian": 2,
+    "purchase_date": "2024-05-08",
+    "useful_life_years": 10,
+    "notes": "",
+    "created_by": 3,
+    "created_at": "2026-08-21T06:51:08.753Z",
+    "updated_by": 3,
+    "updated_at": "2026-08-21T07:10:08.418Z"
+  }
+},
+{
+  "model": "assets.asset",
+  "pk": 10,
+  "fields": {
+    "asset_no": "PINA00010",
+    "name": "電腦主機",
+    "category": "it_equipment",
+    "specification": "ASUS002",
+    "department": 3,
+    "custodian": 3,
+    "purchase_date": "2026-02-02",
+    "useful_life_years": 5,
+    "notes": "",
+    "created_by": 3,
+    "created_at": "2026-08-21T06:52:11.978Z",
+    "updated_by": 3,
+    "updated_at": "2026-08-21T07:10:08.418Z"
+  }
+},
+{
+  "model": "assets.asset",
+  "pk": 11,
+  "fields": {
+    "asset_no": "PINA00011",
+    "name": "電腦螢幕",
+    "category": "it_equipment",
+    "specification": "27吋",
+    "department": 3,
+    "custodian": 3,
+    "purchase_date": "2026-03-17",
+    "useful_life_years": 5,
+    "notes": "",
+    "created_by": 3,
+    "created_at": "2026-08-21T09:42:39.024Z",
+    "updated_by": 3,
+    "updated_at": "2026-08-21T09:42:39.024Z"
+  }
+},
+{
+  "model": "assets.asset",
+  "pk": 12,
+  "fields": {
+    "asset_no": "PINA00012",
+    "name": "辦公桌",
+    "category": "furniture",
+    "specification": "120公分",
+    "department": 3,
+    "custodian": 3,
+    "purchase_date": "2025-06-12",
+    "useful_life_years": 10,
+    "notes": "",
+    "created_by": 3,
+    "created_at": "2026-08-21T09:43:30.921Z",
+    "updated_by": 3,
+    "updated_at": "2026-08-21T09:43:30.921Z"
+  }
+},
+{
+  "model": "assets.asset",
+  "pk": 13,
+  "fields": {
+    "asset_no": "PINA00013",
+    "name": "辦公椅",
+    "category": "furniture",
+    "specification": "",
+    "department": 3,
+    "custodian": 3,
+    "purchase_date": "2025-01-06",
+    "useful_life_years": 10,
+    "notes": "",
+    "created_by": 3,
+    "created_at": "2026-08-21T09:44:06.609Z",
+    "updated_by": 3,
+    "updated_at": "2026-08-21T09:44:06.609Z"
+  }
+},
+{
+  "model": "assets.asset",
+  "pk": 14,
+  "fields": {
+    "asset_no": "PINA00014",
+    "name": "櫃子",
+    "category": "furniture",
+    "specification": "3層置物櫃",
+    "department": 3,
+    "custodian": 3,
+    "purchase_date": "2023-07-12",
+    "useful_life_years": 10,
+    "notes": "",
+    "created_by": 3,
+    "created_at": "2026-08-21T09:45:30.484Z",
+    "updated_by": 3,
+    "updated_at": "2026-08-21T09:45:30.484Z"
+  }
+},
+{
+  "model": "assets.asset",
+  "pk": 15,
+  "fields": {
+    "asset_no": "PINA00015",
+    "name": "檔案櫃",
+    "category": "furniture",
+    "specification": "雙門式",
+    "department": 3,
+    "custodian": 3,
+    "purchase_date": "2025-05-13",
+    "useful_life_years": 10,
+    "notes": "",
+    "created_by": 3,
+    "created_at": "2026-08-21T09:46:59.871Z",
+    "updated_by": 3,
+    "updated_at": "2026-08-21T09:46:59.871Z"
+  }
+}
+]

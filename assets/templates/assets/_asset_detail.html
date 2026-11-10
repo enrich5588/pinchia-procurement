@@ -1,0 +1,49 @@
+<div class="asset-form-content asset-detail-content">
+  <div class="asset-detail-heading">
+    <div>
+      <p class="asset-eyebrow">ASSET DETAIL</p>
+      <h2 id="asset-modal-title">{{ asset.asset_no }} {{ asset.name }}</h2>
+    </div>
+    <span class="asset-badge asset-badge-other">{{ asset.category }}</span>
+  </div>
+
+  <dl class="asset-detail-grid">
+    <div><dt>財產編號</dt><dd>{{ asset.asset_no }}</dd></div>
+    <div><dt>財產名稱</dt><dd>{{ asset.name }}</dd></div>
+    <div><dt>公司</dt><dd>{{ asset.get_company_display }}</dd></div>
+    <div><dt>財產類別</dt><dd>{{ asset.category }}</dd></div>
+    <div><dt>廠牌</dt><dd>{{ asset.brand|default:"尚未填寫" }}</dd></div>
+    <div><dt>財產規格型號</dt><dd>{{ asset.specification|default:"尚未填寫" }}</dd></div>
+    <div class="asset-detail-wide"><dt>配件</dt><dd>{{ asset.accessories|default:"—"|linebreaksbr }}</dd></div>
+    <div><dt>數量</dt><dd>{{ asset.quantity }}</dd></div>
+    <div><dt>單價</dt><dd>{% if asset.unit_price is not None %}{{ asset.unit_price|floatformat:2 }}{% else %}—{% endif %}</dd></div>
+    <div><dt>營業稅</dt><dd>{% if asset.business_tax is not None %}{{ asset.business_tax|floatformat:2 }}{% else %}—{% endif %}</dd></div>
+    <div><dt>合計</dt><dd><strong>{{ asset.total|floatformat:2 }}</strong></dd></div>
+    <div><dt>所屬部門</dt><dd>{{ asset.department.name }}</dd></div>
+    <div><dt>保管人員</dt><dd>{% if asset.custodian %}{{ asset.custodian.username }}{% else %}部門資產（共用資源）{% endif %}</dd></div>
+    <div><dt>採購日期</dt><dd>{{ asset.purchase_date|date:"Y/m/d" }}</dd></div>
+    <div><dt>使用年限</dt><dd>{% if asset.useful_life_years %}{{ asset.useful_life_years }} 年{% else %}未設定{% endif %}</dd></div>
+    <div class="asset-detail-wide"><dt>備註（保固期限等）</dt><dd>{{ asset.notes|default:"—"|linebreaksbr }}</dd></div>
+  </dl>
+
+  <section class="asset-detail-images" aria-label="財產圖片">
+    <h3>財產圖片 <span>{{ asset.images.count }} 張</span></h3>
+    {% if asset.images.all %}
+      <div class="asset-detail-image-grid">
+        {% for photo in asset.images.all %}
+          <a href="{% url 'asset_image' photo.pk %}" target="_blank" rel="noopener">
+            <img src="{% url 'asset_image' photo.pk %}" alt="{{ asset.name }} 圖片 {{ forloop.counter }}" loading="lazy">
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="asset-muted">尚無圖片</p>
+    {% endif %}
+  </section>
+
+  <div class="asset-form-actions">
+    {% if can_manage %}<a class="asset-detail-edit" href="{% url 'asset_edit' asset.pk %}" data-asset-form-url="{% url 'asset_edit' asset.pk %}">編輯財產</a>{% endif %}
+    {% if can_request_revision %}<a class="asset-detail-edit" href="{% url 'asset_revise' asset.pk %}" data-asset-form-url="{% url 'asset_revise' asset.pk %}">申請修改</a>{% endif %}
+    {% if is_modal %}<button type="button" class="asset-secondary-action" data-modal-close>關閉</button>{% else %}<a href="{% url 'asset_list' %}">返回清冊</a>{% endif %}
+  </div>
+</div>

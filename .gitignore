@@ -1,0 +1,13 @@
+.venv/
+db.sqlite3
+__pycache__/
+*.pyc
+private-media/
+
+.env
+.venv-rebuild/
+staticfiles/
+.coverage
+.rebuild-verification/
+backups/environment-rebuild/
+.secrets/

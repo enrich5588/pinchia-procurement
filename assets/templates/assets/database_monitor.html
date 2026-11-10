@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}資料庫監看 — 品嘉平台{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'assets/database-monitor.css' %}?v=20260824-3">
+  <script src="{% static 'assets/database-monitor.js' %}?v=20260821-1" defer></script>
+{% endblock %}
+{% block content %}
+<section class="database-monitor" data-database-monitor data-refresh-seconds="{{ refresh_seconds }}">
+  <header class="monitor-header">
+    <div><p class="monitor-eyebrow">READ-ONLY DATABASE MONITOR</p><h1>資料庫監看</h1><p>目前以唯讀方式檢查資料表，頁面不會修改任何資料。</p></div>
+    <div class="monitor-live"><span aria-hidden="true"></span>最後檢查：<time datetime="{{ checked_at|date:'c' }}">{{ checked_at|date:"Y/m/d H:i:s" }}</time></div>
+  </header>
+
+  <div class="monitor-stats">
+    <article><strong>{{ table_count }}</strong><span>資料表</span></article>
+    <article><strong>{{ total_rows }}</strong><span>資料列總數</span></article>
+    <article><strong>{{ asset_table_count }}</strong><span>資產相關資料表</span></article>
+    <article><strong>{{ database_vendor|upper }}</strong><span>資料庫引擎</span></article>
+  </div>
+
+  <section class="monitor-panel">
+    <div class="monitor-toolbar">
+      <div><h2>資料表狀態</h2><p>業務功能資料表可檢視欄位定義與每一筆完整資料。</p></div>
+      <div class="monitor-controls">
+        <label for="table-search">搜尋資料表</label><input id="table-search" type="search" placeholder="輸入資料表名稱" data-table-search>
+        <label for="refresh-interval">自動更新</label>
+        <select id="refresh-interval" data-refresh-select>
+          {% for value, label in refresh_options %}<option value="{{ value }}"{% if refresh_seconds == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+        <button type="button" data-refresh-now>立即更新</button>
+      </div>
+    </div>
+    <div class="monitor-table-wrap">
+      <table class="monitor-table"><thead><tr><th>資料表名稱</th><th>資料列</th><th>欄位數</th><th>狀態</th></tr></thead>
+        <tbody>{% for table in tables %}<tr data-table-row data-table-name="{{ table.name|lower }}"{% if table.is_asset_table %} class="asset-data-table"{% endif %}>
+          <td><details class="table-schema"><summary><code>{{ table.name }}</code>{% if table.is_asset_table %}<span class="asset-table-label">資產專區</span>{% elif table.is_data_table %}<span class="asset-table-label">業務資料</span>{% endif %}<span class="schema-toggle">查看整張資料表</span></summary>
+            {% if table.is_data_table %}<section class="full-data-section">
+              <div class="full-data-heading"><h3>完整資料</h3><p>共 {{ table.row_count }} 筆；黃色欄位為前台隱藏的稽核紀錄。</p></div>
+              {% if table.data_rows %}<div class="full-data-wrap"><table class="full-data-table">
+                <thead><tr>{% for column in table.columns %}<th{% if column.is_audit %} class="audit-column"{% endif %}><code>{{ column.name }}</code>{% if column.is_audit %}<span>後台紀錄</span>{% endif %}</th>{% endfor %}</tr></thead>
+                <tbody>{% for record in table.data_rows %}<tr>{% for value in record.values %}<td{% if value.is_audit %} class="audit-column{% if value.is_null %} null-value{% endif %}"{% elif value.is_null %} class="null-value"{% endif %}>{{ value.value|linebreaksbr }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+              </table></div>{% else %}<p class="schema-unavailable">目前沒有資料。</p>{% endif %}
+            </section>{% endif %}
+            <details class="schema-definition"><summary>查看欄位定義</summary>
+              {% if table.columns %}<div class="schema-table-wrap"><table class="schema-table">
+                <thead><tr><th>欄位名稱</th><th>資料型態</th><th>可為空</th><th>預設值</th><th>屬性／關聯</th></tr></thead>
+                <tbody>{% for column in table.columns %}<tr>
+                  <td><code>{{ column.name }}</code></td><td>{{ column.type }}</td><td>{% if column.nullable %}是{% else %}否{% endif %}</td>
+                  <td><code>{% if column.default is not None %}{{ column.default }}{% else %}—{% endif %}</code></td>
+                  <td><div class="schema-badges">{% if column.primary_key %}<span>主鍵</span>{% endif %}{% if column.unique %}<span>唯一值</span>{% endif %}{% if column.indexed %}<span>索引</span>{% endif %}{% if column.foreign_key %}<span>外鍵 → {{ column.foreign_key }}</span>{% endif %}{% if not column.primary_key and not column.unique and not column.indexed and not column.foreign_key %}<span class="schema-none">—</span>{% endif %}</div></td>
+                </tr>{% endfor %}</tbody>
+              </table></div>{% else %}<p class="schema-unavailable">無法讀取欄位資訊。</p>{% endif %}
+            </details>
+          </details></td>
+          <td>{% if table.row_count is not None %}{{ table.row_count }}{% else %}—{% endif %}</td>
+          <td>{% if table.column_count is not None %}{{ table.column_count }}{% else %}—{% endif %}</td>
+          <td><span class="monitor-status{% if table.status != '正常' %} monitor-status-error{% endif %}"><i></i>{{ table.status }}</span></td>
+        </tr>{% endfor %}</tbody>
+      </table>
+      <p class="monitor-empty" data-table-empty hidden>找不到符合的資料表。</p>
+    </div>
+  </section>
+</section>
+{% endblock %}

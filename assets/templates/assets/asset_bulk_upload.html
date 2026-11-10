@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}批量上傳財產 — 品嘉平台{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'assets/asset-list.css' %}?v=20261020-1">
+  <link rel="stylesheet" href="{% static 'assets/asset-form.css' %}?v=20261109-1">
+{% endblock %}
+{% block content %}
+<section class="asset-page">
+  <div class="card asset-form-card asset-bulk-upload">
+    <p class="asset-eyebrow">ASSET MANAGEMENT</p>
+    <h1>批量上傳財產</h1>
+    <p>上傳 Excel 後會先顯示可編輯的匯入一覽表；確認前不會寫入正式資料庫。</p>
+    <div class="asset-import-guide">
+      <h2>欄位對應</h2>
+      <dl>
+        <div><dt>進貨日期</dt><dd>採購日期</dd></div>
+        <div><dt>公司代碼</dt><dd>公司</dd></div>
+        <div><dt>資產名稱</dt><dd>財產類別</dd></div>
+        <div><dt>型號＋規格</dt><dd>財產規格型號（分行合併）</dd></div>
+        <div><dt>商品名稱</dt><dd>財產名稱</dd></div>
+        <div><dt>部門／使用者</dt><dd>所屬部門／保管人員</dd></div>
+        <div><dt>圖檔</dt><dd>財產圖片</dd></div>
+      </dl>
+      <p>財產編號也會一併匯入。公司支援 PCA、PCB、PCC，或直接填公司名稱。只有年份的進貨日期會轉為該年 1 月 1 日。</p>
+    </div>
+
+    {% if import_errors %}
+      <div class="asset-import-errors" role="alert">
+        <h2>無法匯入，請修正以下資料</h2>
+        <ul>{% for error in import_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+      </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      <div class="asset-form-field">
+        {{ form.excel_file.label_tag }}
+        {{ form.excel_file }}
+        {{ form.excel_file.errors }}
+        <small>{{ form.excel_file.help_text }}</small>
+      </div>
+      <fieldset class="asset-import-test-mode">
+        <legend>測試環境設定</legend>
+        <label class="asset-import-checkbox">
+          {{ form.testing_compatibility }}
+          <span><strong>{{ form.testing_compatibility.label }}</strong><small>{{ form.testing_compatibility.help_text }}</small></span>
+        </label>
+        {{ form.testing_compatibility.errors }}
+        <div class="asset-form-field">
+          {{ form.fallback_department.label_tag }}
+          {{ form.fallback_department }}
+          {{ form.fallback_department.errors }}
+        </div>
+      </fieldset>
+      <div class="asset-form-actions">
+        <button type="submit">讀取並預覽</button>
+        <a href="{% url 'asset_list' %}">返回財產清冊</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ asset.asset_no }} {{ asset.name }} — 品嘉平台{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'assets/asset-list.css' %}?v=20261019-1">
+  <link rel="stylesheet" href="{% static 'assets/asset-form.css' %}?v=20261109-1">
+{% endblock %}
+{% block content %}
+  <div class="card asset-form-card">{% include "assets/_asset_detail.html" %}</div>
+{% endblock %}
