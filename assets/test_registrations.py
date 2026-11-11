@@ -15,7 +15,7 @@ class AssetRegistrationTests(TestCase):
     def setUp(self):
         self.it = Department.objects.create(name="資訊部")
         self.business = Department.objects.create(name="都更事業部")
-        self.management = Department.objects.create(name="管理部")
+        self.management = Department.objects.create(name="管理與事業發展部")
         self.staff = self._user("staff", self.it)
         self.other_staff = self._user("other", self.business)
         self.manager = self._user("manager", self.management)
@@ -317,7 +317,7 @@ class AssetRegistrationTests(TestCase):
 
 class DatabaseMonitorTests(TestCase):
     def setUp(self):
-        self.management = Department.objects.create(name="管理部")
+        self.management = Department.objects.create(name="管理與事業發展部")
         self.it = Department.objects.create(name="資訊部")
         self.manager = User.objects.create_user("monitor_manager", password="x")
         self.staff = User.objects.create_user("monitor_staff", password="x")

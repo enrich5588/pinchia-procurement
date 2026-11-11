@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}權限管理｜品嘉建設集團{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'organization/permissions.css' %}">{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">ORGANIZATION & ACCESS</p><h1>權限管理</h1><p class="subtitle">從部門到個人，清楚掌握每一份存取權限。</p></div><span class="permission-admin-note">{% include "includes/icon.html" with name="shield" %} 僅系統管理員可編輯</span></div>
+<div class="permission-summary" aria-label="組織概況">
+  <div><span>組織部門</span><strong>{{ department_count }}<small>個部門</small></strong></div>
+  <div><span>全部人員</span><strong>{{ user_count }}<small>位同仁</small></strong></div>
+  <div class="permission-summary-note"><b>設定有依循，權限更清楚</b><p>個人明確設定優先於部門，未設定時自動繼承。</p></div>
+</div>
+<nav class="tabs permission-tabs" aria-label="權限設定類型">
+  <a class="tab{% if scope == 'department' %} active{% endif %}" href="?scope=department"{% if scope == 'department' %} aria-current="page"{% endif %}>部門權限 <span>{{ department_count }}</span></a>
+  <a class="tab{% if scope == 'user' %} active{% endif %}" href="?scope=user"{% if scope == 'user' %} aria-current="page"{% endif %}>個人權限 <span>{{ user_count }}</span></a>
+</nav>
+<div class="permission-directory-layout{% if scope == 'department' %} departments-only{% endif %}">
+{% if scope == 'user' %}
+<aside class="panel permission-departments" aria-label="依部門篩選人員">
+  <div class="panel-head"><div><p class="eyebrow">DEPARTMENTS</p><h2>部門目錄</h2></div></div>
+  <div class="permission-department-links">
+    <a href="{{ all_users_url }}" class="permission-department-link{% if not selected_department %} is-selected{% endif %}"{% if not selected_department %} aria-current="true"{% endif %}><span>全部人員</span><b>{{ user_count }}</b></a>
+    {% for department in departments %}<a href="{{ department.url }}" class="permission-department-link{% if selected_department == department.id %} is-selected{% endif %}"{% if selected_department == department.id %} aria-current="true"{% endif %}><span>{{ department.name }}</span><b>{{ department.members }}</b></a>{% endfor %}
+    <a href="{{ unassigned_url }}" class="permission-department-link{% if selected_department == 'unassigned' %} is-selected{% endif %}"{% if selected_department == 'unassigned' %} aria-current="true"{% endif %}><span>未設定部門</span><b>{{ unassigned_count }}</b></a>
+  </div>
+  <p class="permission-directory-hint">選擇部門可篩選人員；不會變更人員的部門歸屬。</p>
+</aside>
+{% endif %}
+<section class="panel permission-directory" id="permission-directory" aria-label="{% if scope == 'user' %}人員{% else %}部門{% endif %}清單">
+  <div class="panel-head permission-directory-head"><div><p class="eyebrow">{% if scope == 'user' %}PEOPLE DIRECTORY{% else %}DEPARTMENT DIRECTORY{% endif %}</p><h2>{% if scope == 'user' %}人員清單{% else %}部門清單{% endif %}</h2><p>顯示第 {{ directory_page.start_index }}–{{ directory_page.end_index }} 筆，共 {{ directory_page.paginator.count }} 筆{% if has_filters %}（全部 {{ total_targets }} 筆）{% endif %} · 點選「編輯權限」於下方設定</p></div></div>
+  <form method="get" role="search" class="permission-search">
+    <input type="hidden" name="scope" value="{{ scope }}">
+    {% if target %}<input type="hidden" name="target" value="{{ target.pk }}">{% endif %}
+    {% if selected_department %}<input type="hidden" name="department" value="{{ selected_department }}">{% endif %}
+    <div class="permission-search-field"><label for="permission-search">{% if scope == 'user' %}搜尋人員{% else %}搜尋部門{% endif %}</label><input id="permission-search" name="q" type="search" maxlength="200" value="{{ search_query }}" placeholder="{% if scope == 'user' %}姓名、帳號、信箱或部門{% else %}輸入部門名稱{% endif %}"></div>
+    {% if scope == 'user' %}<div class="permission-status-field"><label for="permission-status">帳號狀態</label><select id="permission-status" name="status"><option value="">全部狀態</option><option value="active"{% if account_status == 'active' %} selected{% endif %}>啟用中</option><option value="inactive"{% if account_status == 'inactive' %} selected{% endif %}>已停用</option></select></div>{% endif %}
+    <button class="btn" type="submit">搜尋</button>{% if has_filters %}<a class="text-link" href="{{ clear_search_url }}">清除篩選</a>{% endif %}
+  </form>
+  <div class="permission-errors">{{ target_form.target.errors }}</div>
+  {% if scope == 'user' %}
+  <div class="permission-people-wrap"><table class="permission-people">
+    <caption class="permission-sr-only">人員帳號、所屬部門、權限設定與啟用狀態</caption>
+    <thead><tr><th scope="col">人員 / 帳號</th><th scope="col">部門</th><th scope="col">角色與權限</th><th scope="col">狀態</th><th scope="col"><span class="permission-sr-only">操作</span></th></tr></thead>
+    <tbody>{% for item in target_list %}<tr{% if target.pk == item.id %} class="is-selected"{% endif %}>
+      <td class="permission-person-cell"><div class="permission-person"><span class="permission-avatar" aria-hidden="true">{{ item.name|first }}</span><div><strong>{{ item.name }}</strong><span class="permission-account">{{ item.account }}</span>{% if item.email and item.email != item.account %}<span class="permission-account">{{ item.email }}</span>{% endif %}<span class="permission-account">{% if item.m365 %}Microsoft 365{% else %}本機帳號{% endif %}</span></div></div></td>
+      <td data-label="部門"><span class="permission-department-name">{{ item.department }}</span></td>
+      <td data-label="角色與權限"><div class="permission-tags"><span{% if item.superuser %} class="permission-tag-admin"{% endif %}>{% if item.superuser %}系統管理員{% else %}一般人員{% endif %}</span><span>{% if item.rules %}{{ item.rules }} 項明確設定{% else %}全部繼承{% endif %}</span></div></td>
+      <td data-label="狀態"><span class="permission-status{% if not item.active %} is-inactive{% endif %}">{% if item.active %}啟用中{% else %}已停用{% endif %}</span></td>
+      <td class="permission-row-action"><a class="permission-edit-link" href="{{ item.url }}" aria-label="編輯 {{ item.name }} 的權限"{% if target.pk == item.id %} aria-current="true"{% endif %}>{% if target.pk == item.id %}正在編輯{% else %}編輯權限{% endif %}<span aria-hidden="true"> →</span></a></td>
+    </tr>{% empty %}<tr><td colspan="5"><div class="permission-list-empty">{% include "includes/icon.html" with name="users" %}<h3>{% if has_filters %}找不到符合條件的人員{% else %}目前沒有人員資料{% endif %}</h3><p>{% if has_filters %}試試其他關鍵字、部門或帳號狀態。{% else %}人員資料將依既有帳號與組織同步流程顯示。{% endif %}</p>{% if has_filters %}<a class="btn secondary" href="{{ clear_search_url }}">顯示全部人員</a>{% endif %}</div></td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}
+  <div class="permission-department-grid">
+    {% for item in target_list %}<article class="permission-department-card{% if target.pk == item.id %} is-selected{% endif %}">
+      <div class="permission-department-card-top"><span class="permission-department-icon" aria-hidden="true">{% include "includes/icon.html" with name="users" %}</span><span class="permission-member-count">{{ item.members }} 位人員</span></div>
+      <h3>{{ item.name }}</h3><p>部門預設權限</p><div class="permission-tags"><span>{% if item.rules %}{{ item.rules }} 項明確設定{% else %}全部繼承系統預設{% endif %}</span></div>
+      <div class="permission-card-actions"><a class="permission-edit-link" href="{{ item.url }}" aria-label="編輯 {{ item.name }} 的權限"{% if target.pk == item.id %} aria-current="true"{% endif %}>{% if target.pk == item.id %}正在編輯{% else %}編輯權限{% endif %} →</a><a href="{{ item.members_url }}" aria-label="查看 {{ item.name }} 的人員">查看人員</a></div>
+    </article>{% empty %}<div class="permission-list-empty">{% include "includes/icon.html" with name="users" %}<h3>{% if search_query %}找不到符合條件的部門{% else %}目前沒有部門資料{% endif %}</h3><p>{% if search_query %}請調整關鍵字或清除搜尋。{% else %}部門資料將依既有組織同步流程顯示。{% endif %}</p>{% if search_query %}<a class="btn secondary" href="{{ clear_search_url }}">顯示全部部門</a>{% endif %}</div>{% endfor %}
+  </div>
+  {% endif %}
+  <div class="permission-pagination">
+    <p>每頁 20 筆 · 第 {{ directory_page.number }} / {{ directory_page.paginator.num_pages }} 頁</p>
+    {% if directory_page.has_other_pages %}<nav aria-label="{% if scope == 'user' %}人員{% else %}部門{% endif %}清單分頁">
+      {% if previous_page_url %}<a href="{{ previous_page_url }}" rel="prev">上一頁</a>{% else %}<span aria-disabled="true">上一頁</span>{% endif %}
+      {% for item in page_links %}{% if item.current %}<span class="is-current" aria-current="page" aria-label="第 {{ item.label }} 頁">{{ item.label }}</span>{% elif item.url %}<a href="{{ item.url }}" aria-label="第 {{ item.label }} 頁">{{ item.label }}</a>{% else %}<span class="pagination-ellipsis">{{ item.label }}</span>{% endif %}{% endfor %}
+      {% if next_page_url %}<a href="{{ next_page_url }}" rel="next">下一頁</a>{% else %}<span aria-disabled="true">下一頁</span>{% endif %}
+    </nav>{% endif %}
+  </div>
+</section>
+</div>
+<details class="permission-inheritance"><summary>權限如何生效？</summary><div class="details-content"><p>判斷順序：系統管理員 → 個人明確設定 → 部門設定 → 系統預設。個人選擇「繼承」時，跟隨目前所屬部門；部門選擇「繼承」時，使用系統預設。</p><p>處理權限須同時允許對應功能的「進入」。取得處理權限後，該模組沿用管理端流程；申請人、當前簽核人、承接部門與案件狀態限制仍然有效。權限變更於後續請求生效，不需重新登入。</p></div></details>
+<div class="permission-editor" id="permission-editor">
+{% if target %}
+<section class="panel"><div class="panel-head"><div><h2>{{ target_label }}</h2><p>以下顯示目前已儲存設定的結果；儲存後更新。系統管理員保留全部權限。</p></div></div>
+  <form method="post">{% csrf_token %}{{ permission_form.revision }}
+    <div class="permission-errors">{{ permission_form.non_field_errors }}{{ permission_form.revision.errors }}</div>
+    <div class="table-wrap"><table class="responsive-table permission-table">
+      <thead><tr><th>功能與範圍</th><th>設定</th><th>目前權限</th></tr></thead>
+      <tbody>{% for row in permission_rows %}<tr>
+        <td class="primary-cell">{{ row.field.label_tag }}<small>{{ row.description }}</small><small>系統預設：{% if row.default %}允許{% else %}拒絕{% endif %}</small></td>
+        <td data-label="設定">{{ row.field }}{{ row.field.errors }}</td>
+        <td data-label="目前權限"><strong>{% if row.allowed %}允許{% else %}拒絕{% endif %}</strong><small>{{ row.source }}</small></td>
+      </tr>{% endfor %}</tbody>
+    </table></div>
+    <div class="form-actions"><button class="btn" type="submit">儲存權限設定</button><a class="btn secondary" href="{{ reload_url }}">重新載入</a></div>
+  </form>
+</section>
+<section class="panel"><div class="panel-head"><h2>最近權限異動</h2></div><div class="panel-body">
+  {% for audit in history %}<details class="permission-history"><summary>{{ audit.created_at|date:"Y/m/d H:i:s" }} · {{ audit.actor_label }} · {{ audit.changes|length }} 項異動</summary>
+  <ul>{% for code, change in audit.changes.items %}<li><code>{{ code }}</code>：{{ change.before }} → {{ change.after }}</li>{% endfor %}</ul></details>
+  {% empty %}<p>此對象尚無人工設定異動紀錄。</p>{% endfor %}
+</div></section>
+{% else %}
+<section class="panel permission-editor-empty"><div class="panel-body">{% include "includes/icon.html" with name="shield" %}<h2>選擇{% if scope == 'user' %}一位人員{% else %}一個部門{% endif %}</h2><p>點選清單項目，即可查看生效權限、編輯設定及查閱異動紀錄。</p></div></section>
+{% endif %}
+</div>
+
+{% endblock %}

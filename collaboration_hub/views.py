@@ -192,7 +192,7 @@ def task_withdraw(request, pk):
 @feature_required
 def forward_equipment(request, pk):
     if not can_manage_collaboration_tasks(request.user):
-        raise PermissionDenied("只有管理部人員可轉發設備申請。")
+        raise PermissionDenied("只有具備處理權限的人員可轉發設備申請。")
     application = get_object_or_404(
         EquipmentApplication.objects.select_related("department", "applicant"), pk=pk
     )

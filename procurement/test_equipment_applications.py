@@ -15,7 +15,7 @@ class EquipmentApplicationTests(TestCase):
     def setUp(self):
         self.it = Department.objects.create(name="資訊部")
         self.business = Department.objects.create(name="都更事業部")
-        self.management = Department.objects.create(name="管理部")
+        self.management = Department.objects.create(name="管理與事業發展部")
         self.staff = self._user("staff", self.it)
         self.other = self._user("other", self.business)
         self.manager = self._user("manager", self.management)

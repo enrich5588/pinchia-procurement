@@ -1,10 +1,13 @@
 from django.db.models import Q
 
 from .models import ApprovalStep
+from organization.permissions import has_permission
 
 
 def visible_approval_requests(user, queryset):
-    if user.is_superuser:
+    if not has_permission(user, "approvals.access"):
+        return queryset.none()
+    if has_permission(user, "approvals.view_all"):
         return queryset
     return queryset.filter(
         Q(applicant=user)
@@ -17,8 +20,10 @@ def visible_approval_requests(user, queryset):
 
 
 def can_view_approval_request(user, approval):
+    if not has_permission(user, "approvals.access"):
+        return False
     return (
-        user.is_superuser
+        has_permission(user, "approvals.view_all")
         or approval.applicant_id == user.pk
         or approval.steps.filter(
             approver=user,

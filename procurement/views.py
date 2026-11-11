@@ -66,7 +66,7 @@ def supply_list(request):
 def supply_create(request):
     department = user_department(request.user)
     if can_manage_office_supply_applications(request.user):
-        raise PermissionDenied("管理部人員請由申請清單處理用品申請。")
+        raise PermissionDenied("案件處理人員請由申請清單處理用品申請。")
     if department is None:
         raise PermissionDenied("帳號尚未設定所屬部門，無法申請用品。")
     form = OfficeSupplyApplicationForm(
@@ -97,7 +97,7 @@ def supply_create(request):
 @feature_required
 def supply_edit(request, pk):
     if can_manage_office_supply_applications(request.user):
-        raise PermissionDenied("管理部人員不可修改申請人的用品申請。")
+        raise PermissionDenied("案件處理人員不可修改申請人的用品申請。")
     department = user_department(request.user)
     application = get_object_or_404(OfficeSupplyApplication, pk=pk, applicant=request.user)
     editable = {OfficeSupplyApplication.Status.PENDING, OfficeSupplyApplication.Status.RETURNED}
@@ -169,7 +169,7 @@ def supply_detail(request, pk):
 @require_POST
 def supply_return(request, pk):
     if not can_manage_office_supply_applications(request.user):
-        raise PermissionDenied("只有管理部人員可退回用品申請。")
+        raise PermissionDenied("只有具備處理權限的人員可退回用品申請。")
     with transaction.atomic():
         application = get_object_or_404(OfficeSupplyApplication.objects.select_for_update(), pk=pk)
         if application.status not in {
@@ -190,7 +190,7 @@ def supply_return(request, pk):
 @require_POST
 def supply_processing(request, pk):
     if not can_manage_office_supply_applications(request.user):
-        raise PermissionDenied("只有管理部人員可將用品申請設為處理中。")
+        raise PermissionDenied("只有具備處理權限的人員可將用品申請設為處理中。")
     with transaction.atomic():
         application = get_object_or_404(OfficeSupplyApplication.objects.select_for_update(), pk=pk)
         if application.status != OfficeSupplyApplication.Status.PENDING:
@@ -208,7 +208,7 @@ def supply_processing(request, pk):
 @require_POST
 def supply_approve(request, pk):
     if not can_manage_office_supply_applications(request.user):
-        raise PermissionDenied("只有管理部人員可完成用品申請。")
+        raise PermissionDenied("只有具備處理權限的人員可完成用品申請。")
     with transaction.atomic():
         application = get_object_or_404(OfficeSupplyApplication.objects.select_for_update(), pk=pk)
         if application.status not in {
@@ -233,7 +233,7 @@ def supply_approve(request, pk):
 @require_POST
 def supply_cancel(request, pk):
     if can_manage_office_supply_applications(request.user):
-        raise PermissionDenied("管理部人員不可代替申請人取消用品申請。")
+        raise PermissionDenied("案件處理人員不可代替申請人取消用品申請。")
     with transaction.atomic():
         application = get_object_or_404(
             OfficeSupplyApplication.objects.select_for_update(),
@@ -257,7 +257,7 @@ def supply_cancel(request, pk):
 @require_POST
 def supply_bulk_return(request):
     if not can_manage_office_supply_applications(request.user):
-        raise PermissionDenied("只有管理部人員可批量退回用品申請。")
+        raise PermissionDenied("只有具備處理權限的人員可批量退回用品申請。")
     application_ids = _selected_application_ids(request.POST.getlist("application_ids"))
     if not application_ids:
         messages.error(request, "請至少勾選一筆用品申請。")
@@ -288,7 +288,7 @@ def supply_bulk_return(request):
 @require_POST
 def supply_bulk_processing(request):
     if not can_manage_office_supply_applications(request.user):
-        raise PermissionDenied("只有管理部人員可批量處理用品申請。")
+        raise PermissionDenied("只有具備處理權限的人員可批量處理用品申請。")
     application_ids = _selected_application_ids(request.POST.getlist("application_ids"))
     if not application_ids:
         messages.error(request, "請至少勾選一筆用品申請。")
@@ -319,7 +319,7 @@ def supply_bulk_processing(request):
 @require_POST
 def supply_bulk_complete(request):
     if not can_manage_office_supply_applications(request.user):
-        raise PermissionDenied("只有管理部人員可批量完成用品申請。")
+        raise PermissionDenied("只有具備處理權限的人員可批量完成用品申請。")
     application_ids = _selected_application_ids(request.POST.getlist("application_ids"))
     if not application_ids:
         messages.error(request, "請至少勾選一筆用品申請。")
@@ -390,7 +390,7 @@ def equipment_list(request):
 def equipment_create(request):
     department = user_department(request.user)
     if can_manage_equipment_applications(request.user):
-        raise PermissionDenied("管理部人員請由申請清單處理設備申請。")
+        raise PermissionDenied("案件處理人員請由申請清單處理設備申請。")
     if department is None:
         raise PermissionDenied("帳號尚未設定所屬部門，無法申請設備。")
     form = EquipmentApplicationForm(request.POST or None, department=department, applicant=request.user)
@@ -417,7 +417,7 @@ def equipment_create(request):
 @feature_required
 def equipment_edit(request, pk):
     if can_manage_equipment_applications(request.user):
-        raise PermissionDenied("管理部人員不可修改申請人的設備申請。")
+        raise PermissionDenied("案件處理人員不可修改申請人的設備申請。")
     department = user_department(request.user)
     application = get_object_or_404(EquipmentApplication, pk=pk, applicant=request.user)
     editable = {EquipmentApplication.Status.PENDING, EquipmentApplication.Status.RETURNED}
@@ -468,7 +468,7 @@ def equipment_detail(request, pk):
 
 def _equipment_manager_transition(request, pk, action):
     if not can_manage_equipment_applications(request.user):
-        raise PermissionDenied("只有管理部人員可處理設備申請。")
+        raise PermissionDenied("只有具備處理權限的人員可處理設備申請。")
     with transaction.atomic():
         application = get_object_or_404(EquipmentApplication.objects.select_for_update(), pk=pk)
         eligible = {EquipmentApplication.Status.PENDING, EquipmentApplication.Status.PROCESSING}
@@ -523,7 +523,7 @@ def equipment_complete(request, pk):
 @require_POST
 def equipment_cancel(request, pk):
     if can_manage_equipment_applications(request.user):
-        raise PermissionDenied("管理部人員不可代替申請人取消設備申請。")
+        raise PermissionDenied("案件處理人員不可代替申請人取消設備申請。")
     with transaction.atomic():
         application = get_object_or_404(EquipmentApplication.objects.select_for_update(), pk=pk, applicant=request.user)
         if application.status not in {EquipmentApplication.Status.PENDING, EquipmentApplication.Status.RETURNED}:
@@ -539,7 +539,7 @@ def equipment_cancel(request, pk):
 
 def _equipment_bulk_transition(request, action):
     if not can_manage_equipment_applications(request.user):
-        raise PermissionDenied("只有管理部人員可批量處理設備申請。")
+        raise PermissionDenied("只有具備處理權限的人員可批量處理設備申請。")
     application_ids = _selected_application_ids(request.POST.getlist("application_ids"))
     if not application_ids:
         messages.error(request, "請至少勾選一筆設備申請。")

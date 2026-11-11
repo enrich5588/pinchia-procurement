@@ -1,0 +1,54 @@
+name: Test and deploy
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pinjia-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.development
+      ALLOW_LOCAL_LOGIN: "false"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -r requirements.production.txt
+      - run: python -m pip check
+      - name: Validate deployment configuration
+        env:
+          DEPLOY_ROOT: /srv/pinjia
+          RELEASE: ci
+        run: |
+          bash -n scripts/deploy.sh
+          docker compose --env-file deploy/server.env.example -f deploy/compose.yaml config --quiet --no-env-resolution
+      - name: Build production container
+        run: docker build --tag pinjia:ci .
+      - run: python manage.py check
+      - run: python manage.py makemigrations --check --dry-run
+      - run: python manage.py test --noinput
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: test
+    runs-on: [self-hosted, linux, x64, pinjia-production]
+    environment: production
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Deploy exact tested commit
+        env:
+          RELEASE: ${{ github.sha }}
+        run: bash scripts/deploy.sh "$RELEASE"

@@ -36,7 +36,8 @@ from .importers import (
     prepare_registration_workbook,
 )
 from .models import Asset, AssetImage, AssetImportBatch, AssetRegistration
-from .permissions import can_manage_assets
+from .permissions import can_manage_assets, can_manage_registrations, can_monitor_database
+from organization.permissions import has_permission
 from .services import (
     apply_registration_image_changes,
     next_registration_case_no,
@@ -113,7 +114,7 @@ def asset_detail(request, pk):
             applicant=request.user,
             status=AssetRegistration.Status.APPROVED,
         ).exists()
-        can_request_revision = (
+        can_request_revision = has_permission(request.user, "registrations.access") and (
             asset.custodian_id == request.user.pk or has_approved_registration
         )
     template = "assets/_asset_detail.html" if _is_modal_request(request) else "assets/asset_detail.html"
@@ -129,7 +130,7 @@ def asset_detail(request, pk):
 @feature_required
 def asset_create(request):
     if not can_manage_assets(request.user):
-        raise PermissionDenied("只有管理部人員可新增公司財產。")
+        raise PermissionDenied("只有具備處理權限的人員可新增公司財產。")
 
     form = AssetForm(request.POST or None, request.FILES or None)
     if request.method == "POST" and form.is_valid():
@@ -152,7 +153,7 @@ def asset_create(request):
 @feature_required
 def asset_bulk_upload(request):
     if not can_manage_assets(request.user):
-        raise PermissionDenied("只有管理部人員可批量上傳公司財產。")
+        raise PermissionDenied("只有具備處理權限的人員可批量上傳公司財產。")
 
     expired_batches = AssetImportBatch.objects.filter(
         created_at__lt=timezone.now() - timedelta(days=1)
@@ -197,7 +198,7 @@ def asset_bulk_upload(request):
 @feature_required
 def asset_bulk_upload_template(request):
     if not can_manage_assets(request.user):
-        raise PermissionDenied("只有管理部人員可下載財產批量上傳範本。")
+        raise PermissionDenied("只有具備處理權限的人員可下載財產批量上傳範本。")
     output = build_asset_import_template()
     response = HttpResponse(
         output.getvalue(),
@@ -213,7 +214,7 @@ def asset_bulk_upload_template(request):
 @feature_required
 def asset_bulk_upload_preview(request, pk):
     if not can_manage_assets(request.user):
-        raise PermissionDenied("只有管理部人員可確認批量上傳公司財產。")
+        raise PermissionDenied("只有具備處理權限的人員可確認批量上傳公司財產。")
     batch = get_object_or_404(
         AssetImportBatch, pk=pk, created_by=request.user,
         import_type=AssetImportBatch.ImportType.ASSET,
@@ -272,7 +273,7 @@ def asset_bulk_upload_preview(request, pk):
 @feature_required
 def registration_bulk_upload(request):
     department = user_department(request.user)
-    if can_manage_assets(request.user) or department is None:
+    if can_manage_registrations(request.user) or department is None:
         raise PermissionDenied("只有已設定部門的申請人可批量送出資產登記。")
 
     form = AssetBulkUploadForm(request.POST or None, request.FILES or None)
@@ -314,7 +315,7 @@ def registration_bulk_upload(request):
 @login_required
 @feature_required
 def registration_bulk_upload_template(request):
-    if can_manage_assets(request.user) or user_department(request.user) is None:
+    if can_manage_registrations(request.user) or user_department(request.user) is None:
         raise PermissionDenied("只有已設定部門的申請人可下載資產登記批量上傳範本。")
     output = build_registration_import_template()
     response = HttpResponse(
@@ -331,7 +332,7 @@ def registration_bulk_upload_template(request):
 @feature_required
 def registration_bulk_upload_preview(request, pk):
     department = user_department(request.user)
-    if can_manage_assets(request.user) or department is None:
+    if can_manage_registrations(request.user) or department is None:
         raise PermissionDenied("只有已設定部門的申請人可確認資產登記批量上傳。")
     batch = get_object_or_404(
         AssetImportBatch, pk=pk, created_by=request.user,
@@ -388,7 +389,7 @@ def registration_bulk_upload_preview(request, pk):
 @feature_required
 def asset_edit(request, pk):
     if not can_manage_assets(request.user):
-        raise PermissionDenied("只有管理部人員可編輯公司財產。")
+        raise PermissionDenied("只有具備處理權限的人員可編輯公司財產。")
 
     asset = get_object_or_404(Asset, pk=pk)
     form = AssetForm(request.POST or None, request.FILES or None, instance=asset)
@@ -412,7 +413,7 @@ def asset_edit(request, pk):
 @feature_required
 def asset_number_check(request):
     if not can_manage_assets(request.user):
-        raise PermissionDenied("只有管理部人員可查詢財產編號。")
+        raise PermissionDenied("只有具備處理權限的人員可查詢財產編號。")
 
     asset_no = request.GET.get("asset_no", "").strip().upper()
     exists = bool(asset_no) and Asset.objects.filter(
@@ -438,7 +439,7 @@ def asset_image(request, pk):
 @feature_required
 def registration_image(request, pk):
     images = AssetImage.objects.filter(registration__isnull=False)
-    if not can_manage_assets(request.user):
+    if not can_manage_registrations(request.user):
         images = images.filter(registration__applicant=request.user)
     return _image_response(get_object_or_404(images, pk=pk))
 
@@ -464,7 +465,7 @@ def _visible_assets(user):
 @login_required
 @feature_required
 def registration_list(request):
-    can_manage = can_manage_assets(request.user)
+    can_manage = can_manage_registrations(request.user)
     department = user_department(request.user)
     registrations = AssetRegistration.objects.select_related(
         "department", "custodian", "applicant", "approved_by", "asset", "target_asset"
@@ -497,8 +498,8 @@ def registration_list(request):
 @feature_required
 def registration_create(request):
     department = user_department(request.user)
-    if can_manage_assets(request.user):
-        raise PermissionDenied("管理部人員請由處理清單核准資產登記申請。")
+    if can_manage_registrations(request.user):
+        raise PermissionDenied("案件處理人員請由處理清單核准資產登記申請。")
     if department is None:
         raise PermissionDenied("帳號尚未設定所屬部門，無法申請資產登記。")
 
@@ -546,8 +547,8 @@ def registration_custodians(request):
 @login_required
 @feature_required
 def registration_revise(request, pk):
-    if can_manage_assets(request.user):
-        raise PermissionDenied("管理部人員不可提出財產異動申請。")
+    if can_manage_registrations(request.user):
+        raise PermissionDenied("案件處理人員不可提出財產異動申請。")
     source = get_object_or_404(
         AssetRegistration.objects.select_related("asset", "target_asset"),
         pk=pk,
@@ -563,8 +564,10 @@ def registration_revise(request, pk):
 @login_required
 @feature_required
 def asset_revise(request, pk):
+    if not has_permission(request.user, "registrations.access"):
+        raise PermissionDenied("您沒有提出資產異動申請的權限。")
     if can_manage_assets(request.user):
-        raise PermissionDenied("管理部人員請直接編輯財產清冊。")
+        raise PermissionDenied("案件處理人員請直接編輯財產清冊。")
     target_asset = get_object_or_404(_visible_assets(request.user), pk=pk)
     is_original_applicant = AssetRegistration.objects.filter(
         Q(asset=target_asset) | Q(target_asset=target_asset),
@@ -650,8 +653,8 @@ def _handle_asset_revision(request, target_asset):
 @login_required
 @feature_required
 def registration_edit(request, pk):
-    if can_manage_assets(request.user):
-        raise PermissionDenied("管理部人員不可修改員工的資產登記申請。")
+    if can_manage_registrations(request.user):
+        raise PermissionDenied("案件處理人員不可修改員工的資產登記申請。")
     department = user_department(request.user)
     registration = get_object_or_404(
         AssetRegistration, pk=pk, applicant=request.user
@@ -711,7 +714,7 @@ def registration_detail(request, pk):
             "department", "custodian", "asset", "target_asset"
         ), pk=pk
     )
-    if not can_manage_assets(request.user) and registration.applicant_id != request.user.pk:
+    if not can_manage_registrations(request.user) and registration.applicant_id != request.user.pk:
         raise PermissionDenied("您無權查看此資產登記申請。")
     template = "assets/_registration_detail.html" if _is_modal_request(request) else "assets/registration_detail.html"
     return render(request, template, {
@@ -723,8 +726,8 @@ def registration_detail(request, pk):
 @feature_required
 @require_POST
 def registration_return(request, pk):
-    if not can_manage_assets(request.user):
-        raise PermissionDenied("只有管理部人員可退回申請。")
+    if not can_manage_registrations(request.user):
+        raise PermissionDenied("只有具備處理權限的人員可退回申請。")
     with transaction.atomic():
         registration = get_object_or_404(
             AssetRegistration.objects.select_for_update(), pk=pk
@@ -742,8 +745,8 @@ def registration_return(request, pk):
 @feature_required
 @require_POST
 def registration_cancel(request, pk):
-    if can_manage_assets(request.user):
-        raise PermissionDenied("管理部人員不可代替員工取消申請。")
+    if can_manage_registrations(request.user):
+        raise PermissionDenied("案件處理人員不可代替員工取消申請。")
     with transaction.atomic():
         registration = get_object_or_404(
             AssetRegistration.objects.select_for_update(), pk=pk, applicant=request.user
@@ -763,8 +766,8 @@ def registration_cancel(request, pk):
 @login_required
 @feature_required
 def registration_approve(request, pk):
-    if not can_manage_assets(request.user):
-        raise PermissionDenied("只有管理部人員可核准申請。")
+    if not can_manage_registrations(request.user):
+        raise PermissionDenied("只有具備處理權限的人員可核准申請。")
     registration = get_object_or_404(AssetRegistration, pk=pk)
     initial = {
         "name": registration.name,
@@ -838,8 +841,8 @@ def registration_approve(request, pk):
 @feature_required
 @require_POST
 def registration_bulk_return(request):
-    if not can_manage_assets(request.user):
-        raise PermissionDenied("只有管理部人員可批量退回申請。")
+    if not can_manage_registrations(request.user):
+        raise PermissionDenied("只有具備處理權限的人員可批量退回申請。")
     registration_ids = _selected_ids(request.POST.getlist("registration_ids"))
     if not registration_ids:
         messages.error(request, "請至少勾選一筆資產登記申請。")
@@ -864,8 +867,8 @@ def registration_bulk_return(request):
 @feature_required
 @require_POST
 def registration_bulk_approve(request):
-    if not can_manage_assets(request.user):
-        raise PermissionDenied("只有管理部人員可批量核准申請。")
+    if not can_manage_registrations(request.user):
+        raise PermissionDenied("只有具備處理權限的人員可批量核准申請。")
 
     if "commit" not in request.POST:
         registration_ids = _selected_ids(request.POST.getlist("registration_ids"))
@@ -955,8 +958,8 @@ def registration_bulk_approve(request):
 @login_required
 @feature_required
 def database_monitor(request):
-    if not can_manage_assets(request.user):
-        raise PermissionDenied("只有管理部人員與系統管理員可查看資料庫狀態。")
+    if not can_monitor_database(request.user):
+        raise PermissionDenied("只有管理與事業發展部人員與系統管理員可查看資料庫狀態。")
 
     refresh_seconds = request.GET.get("refresh", DATABASE_MONITOR_DEFAULT_REFRESH)
     allowed_refresh_values = {value for value, _ in DATABASE_MONITOR_REFRESH_OPTIONS}

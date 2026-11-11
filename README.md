@@ -46,6 +46,9 @@ cp .env.example .env
 複製 `.env.example` 為 `.env`；系統環境變數優先。`.env` 僅支援 `KEY=value`、整行註解與成對引號，不展開變數或行內註解。
 
 - M365 環境變數、憑證、回呼網址與權限請見 [M365 登入說明](docs/m365-login.md)。
+- 部門與個人權限、預設值及管理方式請見 [權限管理說明](docs/PERMISSIONS.md)。
+- 各功能開發與開放狀態，請見 [面板管理說明](docs/PANELS.md)。
+- M365 全公司部門與員工定期同步請見 [組織同步說明](docs/m365-directory-sync.md)；需要 Application `User.Read.All` 及管理員同意。
 - `FEATURE_OPEN_TO_ALL`：預設 true，false 時僅超級使用者可進入受控功能。
 - `DJANGO_ALLOWED_HOSTS`：逗號分隔的主機名稱。
 - `DJANGO_DB_PATH`：SQLite 絕對路徑；預設根目錄 `db.sqlite3`。
@@ -66,6 +69,8 @@ cp .env.example .env
 ```
 
 ## 部署
+
+Linux VM 的 `main` 自動部署設定已提供，包含 GitHub Actions、Docker、HTTPS、資料備份與 migration；首次安裝及啟用步驟請見 [自動部署說明](docs/auto-deploy.md)。
 
 正式環境在程序環境設定 `DJANGO_SETTINGS_MODULE=config.settings.production`、隨機且至少 50 字元的 `DJANGO_SECRET_KEY` 及明確的 `DJANGO_ALLOWED_HOSTS`。正式設定強制安全 cookie，預設 HTTPS redirect 與 HSTS；TLS 由部署服務提供。反向代理的 HTTPS header 信任設定需依實際部署架構調整。
 

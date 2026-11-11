@@ -6,7 +6,7 @@ from procurement.models import DepartmentManager
 
 
 MANAGER_ACCOUNTS = (
-    ("management_manager", "管理部"),
+    ("management_manager", "管理與事業發展部"),
     ("it_manager", "資訊部"),
     ("renewal_manager", "都更事業部"),
 )

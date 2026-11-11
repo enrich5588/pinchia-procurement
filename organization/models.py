@@ -1,6 +1,7 @@
 """Shared organization models, preserving the existing database schema."""
 from django.conf import settings
 from django.db import models
+from .permission_catalog import PERMISSION_CHOICES
 
 
 class Department(models.Model):
@@ -12,6 +13,19 @@ class Department(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class DepartmentSyncState(models.Model):
+    """Singleton checkpoint/lease for the M365 directory synchronization worker."""
+    last_success = models.DateTimeField("上次成功", null=True, blank=True)
+    next_attempt = models.DateTimeField("下次嘗試", null=True, blank=True)
+    lease_until = models.DateTimeField(null=True, blank=True)
+    last_error = models.CharField("同步狀態", max_length=300, blank=True)
+    department_count = models.PositiveIntegerField("M365 部門數", default=0)
+    employee_count = models.PositiveIntegerField("M365 員工數", default=0)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "M365 組織同步狀態"
 
 
 class UserProfile(models.Model):
@@ -37,7 +51,7 @@ class MicrosoftIdentity(models.Model):
     tenant_id = models.UUIDField("Tenant ID")
     object_id = models.UUIDField("Object ID")
     principal_name = models.CharField("M365 登入名稱", max_length=320, blank=True)
-    department_name = models.CharField("Graph 部門", max_length=64, blank=True)
+    department_name = models.CharField("Graph 部門", max_length=100, blank=True)
     last_synced_at = models.DateTimeField("最後同步時間", null=True, blank=True)
 
     class Meta:
@@ -48,6 +62,64 @@ class MicrosoftIdentity(models.Model):
 
     def __str__(self):
         return f"{self.user} ({self.object_id})"
+
+
+class PermissionRule(models.Model):
+    class Effect(models.TextChoices):
+        ALLOW = "allow", "允許"
+        DENY = "deny", "拒絕"
+
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True,
+                                   related_name="permission_rules", verbose_name="部門")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True,
+                             related_name="permission_rules", verbose_name="個人")
+    permission = models.CharField("權限", max_length=64, choices=PERMISSION_CHOICES)
+    effect = models.CharField("設定", max_length=5, choices=Effect.choices)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "部門與個人權限規則"
+        constraints = [
+            models.CheckConstraint(condition=(
+                models.Q(department__isnull=False, user__isnull=True)
+                | models.Q(department__isnull=True, user__isnull=False)
+            ), name="permission_rule_exactly_one_target"),
+            models.CheckConstraint(condition=models.Q(effect__in=["allow", "deny"]),
+                                   name="permission_rule_valid_effect"),
+            models.UniqueConstraint(fields=["department", "permission"], name="unique_department_permission"),
+            models.UniqueConstraint(fields=["user", "permission"], name="unique_user_permission"),
+        ]
+
+
+class FeaturePanel(models.Model):
+    class Status(models.TextChoices):
+        DEVELOPING = "developing", "開發中"
+        READY = "ready", "已完成・暫不開放"
+        OPEN = "open", "已完成・已開放"
+
+    code = models.CharField("面板代碼", max_length=32, unique=True)
+    status = models.CharField("開放狀態", max_length=12, choices=Status.choices, default=Status.DEVELOPING)
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    updated_at = models.DateTimeField("最後更新", auto_now=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "功能面板"
+        constraints = [models.CheckConstraint(condition=models.Q(status__in=["developing", "ready", "open"]),
+                                              name="feature_panel_valid_status")]
+
+
+class PermissionAudit(models.Model):
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
+                              related_name="permission_audits")
+    actor_label = models.CharField("設定人員", max_length=150)
+    target_type = models.CharField("對象類型", max_length=10)
+    target_id = models.PositiveBigIntegerField("對象 ID")
+    target_label = models.CharField("對象名稱", max_length=200)
+    changes = models.JSONField("異動內容", default=dict)
+    created_at = models.DateTimeField("異動時間", auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]
+        verbose_name = verbose_name_plural = "權限異動紀錄"
 
 
 def user_department(user):

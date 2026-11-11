@@ -25,7 +25,7 @@ class AssetRevisionTests(TestCase):
         self.addCleanup(storage_patch.stop)
 
         self.department = Department.objects.create(name="資訊部")
-        self.management = Department.objects.create(name="管理部")
+        self.management = Department.objects.create(name="管理與事業發展部")
         self.staff = self.user("staff", self.department)
         self.peer = self.user("peer", self.department)
         self.manager = self.user("manager", self.management)

@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>{% block title %}品嘉建設集團{% endblock %}</title>
-  {# Logo slots: static/brand/logo-mark.svg, optional logo-white.png (navy) and logo-full.png (light). #}
+  {# Company-provided logo; optional full wordmarks can use the white/full slots. #}
   <link rel="stylesheet" href="{% static 'design/design-system.css' %}">
   <link rel="stylesheet" href="{% static 'design/bridge.css' %}">
   {% block extra_head %}{% endblock %}
@@ -19,7 +19,7 @@
 <button type="button" class="drawer-backdrop" aria-label="關閉導覽" data-close-drawer></button>
 <aside class="sidebar" id="sidebar">
   <a class="brand{% if shell.logo_white %} use-full{% endif %}" href="{% url 'home' %}">
-    <img src="{% static 'brand/logo-mark.svg' %}" alt="">
+    <img src="{% static 'brand/company-logo.png' %}" alt="">
     <span class="brand-text"><strong>品嘉建設集團</strong><small>採購與資產管理平台</small></span>
     {% if shell.logo_white %}<img class="brand-full" src="{% static 'brand/logo-white.png' %}" alt="品嘉建設集團">{% endif %}
   </a>
@@ -27,20 +27,22 @@
   <nav aria-label="主要導覽">
     <a class="nav-link{% if shell.section == 'overview' %} active{% endif %}" href="{% url 'home' %}"{% if shell.section == 'overview' %} aria-current="page"{% endif %}>{% include "includes/icon.html" with name="home" %}<span>工作總覽</span></a>
     <div class="nav-label">採購申請專區</div>
-    <a class="nav-link{% if shell.section == 'supplies' %} active{% endif %}" href="{% url 'supplies' %}"{% if shell.section == 'supplies' %} aria-current="page"{% endif %}>{% include "includes/icon.html" with name="pen" %}<span>辦公用品申請</span></a>
-    <a class="nav-link{% if shell.section == 'equipment' %} active{% endif %}" href="{% url 'equipment_procurement' %}"{% if shell.section == 'equipment' %} aria-current="page"{% endif %}>{% include "includes/icon.html" with name="screen" %}<span>設備申請</span></a>
+{% if shell.access.supplies %}    <a class="nav-link{% if shell.section == 'supplies' %} active{% endif %}" href="{% url 'supplies' %}"{% if shell.section == 'supplies' %} aria-current="page"{% endif %}>{% include "includes/icon.html" with name="pen" %}<span>辦公用品申請</span></a>{% endif %}
+{% if shell.access.equipment %}    <a class="nav-link{% if shell.section == 'equipment' %} active{% endif %}" href="{% url 'equipment_procurement' %}"{% if shell.section == 'equipment' %} aria-current="page"{% endif %}>{% include "includes/icon.html" with name="screen" %}<span>設備申請</span></a>{% endif %}
     <div class="nav-label">資產管理</div>
-    <a class="nav-link{% if shell.section == 'assets' %} active{% endif %}" href="{% url 'asset_list' %}"{% if shell.section == 'assets' %} aria-current="page"{% endif %}>{% include "includes/icon.html" with name="box" %}<span>財產清冊</span></a>
-    <a class="nav-link{% if shell.section == 'registrations' %} active{% endif %}" href="{% url 'registration_list' %}"{% if shell.section == 'registrations' %} aria-current="page"{% endif %}>{% include "includes/icon.html" with name="file" %}<span>資產登記</span></a>
+{% if shell.access.assets %}    <a class="nav-link{% if shell.section == 'assets' %} active{% endif %}" href="{% url 'asset_list' %}"{% if shell.section == 'assets' %} aria-current="page"{% endif %}>{% include "includes/icon.html" with name="box" %}<span>財產清冊</span></a>{% endif %}
+{% if shell.access.registrations %}    <a class="nav-link{% if shell.section == 'registrations' %} active{% endif %}" href="{% url 'registration_list' %}"{% if shell.section == 'registrations' %} aria-current="page"{% endif %}>{% include "includes/icon.html" with name="file" %}<span>資產登記</span></a>{% endif %}
     <div class="nav-label">協作專區</div>
-    <a class="nav-link{% if shell.section == 'collaboration' %} active{% endif %}" href="{% url 'collaboration_task_list' %}"{% if shell.section == 'collaboration' %} aria-current="page"{% endif %}>{% include "includes/icon.html" with name="users" %}<span>協作案件</span></a>
+{% if shell.access.collaboration %}    <a class="nav-link{% if shell.section == 'collaboration' %} active{% endif %}" href="{% url 'collaboration_task_list' %}"{% if shell.section == 'collaboration' %} aria-current="page"{% endif %}>{% include "includes/icon.html" with name="users" %}<span>協作案件</span></a>{% endif %}
     <div class="nav-label">簽核管理</div>
-    <a class="nav-link{% if shell.section == 'approvals' %} active{% endif %}" href="{% url 'approval_list' %}"{% if shell.section == 'approvals' %} aria-current="page"{% endif %}>{% include "includes/icon.html" with name="check" %}<span>數位簽呈</span>{% if shell.pending_approvals %}<span class="count">{{ shell.pending_approvals }}</span>{% endif %}</a>
+{% if shell.access.approvals %}    <a class="nav-link{% if shell.section == 'approvals' %} active{% endif %}" href="{% url 'approval_list' %}"{% if shell.section == 'approvals' %} aria-current="page"{% endif %}>{% include "includes/icon.html" with name="check" %}<span>數位簽呈</span>{% if shell.pending_approvals %}<span class="count">{{ shell.pending_approvals }}</span>{% endif %}</a>{% endif %}
     {% can_monitor_database user as show_database_monitor %}
     {% if show_database_monitor %}
     <div class="nav-label">系統管理</div>
     <a class="nav-link{% if shell.section == 'monitor' %} active{% endif %}" href="{% url 'database_monitor' %}"{% if shell.section == 'monitor' %} aria-current="page"{% endif %}>{% include "includes/icon.html" with name="database" %}<span>資料庫監看</span></a>
     {% endif %}
+    {% if user.is_superuser %}<a class="nav-link{% if shell.section == 'permissions' %} active{% endif %}" href="{% url 'permission_management' %}">{% include "includes/icon.html" with name="shield" %}<span>權限管理</span></a>{% endif %}
+    {% if user.is_superuser %}<a class="nav-link{% if shell.section == 'panels' %} active{% endif %}" href="{% url 'panel_management' %}">{% include "includes/icon.html" with name="screen" %}<span>面板管理</span></a>{% endif %}
   </nav>
   <div class="nav-bottom">
     <div class="nav-foot">
@@ -88,9 +90,9 @@
 {% if user.is_authenticated %}
 <nav class="mobile-bottom" aria-label="行動捷徑">
   <a class="{% if shell.mobile == 'overview' %}active{% endif %}" href="{% url 'home' %}">{% include "includes/icon.html" with name="home" %}總覽</a>
-  <a class="{% if shell.mobile == 'apply' %}active{% endif %}" href="{% url 'supplies' %}">{% include "includes/icon.html" with name="pen" %}申請</a>
-  <a class="{% if shell.mobile == 'assets' %}active{% endif %}" href="{% url 'asset_list' %}">{% include "includes/icon.html" with name="box" %}資產</a>
-  <a class="{% if shell.mobile == 'approvals' %}active{% endif %}" href="{% url 'approval_list' %}">{% include "includes/icon.html" with name="check" %}簽核</a>
+{% if shell.access.supplies %}  <a class="{% if shell.mobile == 'apply' %}active{% endif %}" href="{% url 'supplies' %}">{% include "includes/icon.html" with name="pen" %}申請</a>{% endif %}
+{% if shell.access.assets %}  <a class="{% if shell.mobile == 'assets' %}active{% endif %}" href="{% url 'asset_list' %}">{% include "includes/icon.html" with name="box" %}資產</a>{% endif %}
+{% if shell.access.approvals %}  <a class="{% if shell.mobile == 'approvals' %}active{% endif %}" href="{% url 'approval_list' %}">{% include "includes/icon.html" with name="check" %}簽核</a>{% endif %}
   <a href="#sidebar" data-drawer>{% include "includes/icon.html" with name="menu" %}更多</a>
 </nav>
 {% endif %}

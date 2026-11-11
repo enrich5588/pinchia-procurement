@@ -30,7 +30,7 @@ class AssetImageTests(TestCase):
         )
         storage_patch.start()
         self.addCleanup(storage_patch.stop)
-        self.management = Department.objects.create(name="管理部")
+        self.management = Department.objects.create(name="管理與事業發展部")
         self.department = Department.objects.create(name="資訊部")
         self.other_department = Department.objects.create(name="其他部門")
         self.manager = self.user("manager", self.management)

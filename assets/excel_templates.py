@@ -125,7 +125,7 @@ def build_registration_import_template():
     instructions.append(["資產登記批量上傳範本"])
     instructions.append([f"1. 請在「{REGISTRATION_SHEET_NAME}」工作表填寫資料，勿修改第一列欄位名稱。"])
     instructions.append(["2. 必填欄位：進貨日期、公司代碼、資產名稱、商品名稱、部門。"])
-    instructions.append(["3. 資產登記不需填財產編號；管理部核准時才會指定財產編號。"])
+    instructions.append(["3. 資產登記不需填財產編號；管理與事業發展部核准時才會指定財產編號。"])
     instructions.append(["4. 公司可使用下拉選單；使用者可自由輸入帳號或姓名，部門共用資產可留空；數量空白時系統會自動使用 1。"])
     instructions.append(["5. 圖片請使用 Excel 的「置於儲存格中」功能放入「圖檔」欄。"])
     instructions.append(["6. 上傳後會先進入預覽表，可修改資料，確認後才會建立待審核案件。"])

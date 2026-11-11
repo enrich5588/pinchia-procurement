@@ -7,6 +7,10 @@ WEEKDAYS = "一二三四五六日"
 
 
 def _section(url_name):
+    if url_name == "panel_management":
+        return "panels"
+    if url_name == "permission_management":
+        return "permissions"
     if url_name == "home":
         return "overview"
     if url_name in {"supplies"} or url_name.startswith("supply"):
@@ -55,6 +59,12 @@ def shell_context(request):
         first = display_name[:1]
         initial = first.upper() if first.isascii() else first
         pending = _pending_approvals(user)
+    access = {}
+    if authenticated:
+        from organization.permissions import has_permission
+        access = {key: has_permission(user, f"{key}.access") for key in [
+            "supplies", "equipment", "assets", "registrations", "collaboration", "approvals",
+        ]}
     mobile = ""
     if section == "overview":
         mobile = "overview"
@@ -73,9 +83,12 @@ def shell_context(request):
         "collaboration": "協作專區",
         "approvals": "簽核管理",
         "monitor": "系統管理",
+        "permissions": "權限管理",
+        "panels": "面板管理",
     }
     return {"shell": {
         "section": section,
+        "access": access,
         "section_label": labels.get(section, "工作總覽"),
         "mobile": mobile,
         "today": f"{now.year} 年 {now.month} 月 {now.day} 日 · 週{WEEKDAYS[now.weekday()]}（台北時間）",

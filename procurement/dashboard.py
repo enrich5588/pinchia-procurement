@@ -6,10 +6,11 @@ from django.utils import timezone
 from approval_hub.models import ApprovalRequest
 from approval_hub.permissions import visible_approval_requests
 from assets.models import AssetRegistration
-from assets.permissions import can_manage_assets
+from assets.permissions import can_manage_assets, can_manage_registrations
 from collaboration_hub.models import CollaborationTask
 from collaboration_hub.permissions import can_manage_collaboration_tasks
 from organization.models import user_department
+from organization.permissions import has_permission
 from project_options.approvals import APPROVAL_DOCUMENT_PRIORITY
 
 from .models import EquipmentApplication, OfficeSupplyApplication
@@ -37,22 +38,34 @@ def build_dashboard(user):
     department = user_department(user)
     manage_procurement = can_manage_office_supply_applications(user)
     manage_assets = can_manage_assets(user)
+    manage_registrations = can_manage_registrations(user)
+    manage_equipment = can_manage_equipment_applications(user)
     manage_collaboration = can_manage_collaboration_tasks(user)
-    scope = "全公司 · 管理部檢視" if manage_procurement else "我的案件"
-    asset_scope = "全公司 · 管理部檢視" if manage_assets else "我的申請"
+    scope = "全公司 · 處理人員檢視" if manage_procurement else "我的案件"
+    equipment_scope = "全公司 · 處理人員檢視" if manage_equipment else "我的案件"
+    asset_scope = "全公司 · 處理人員檢視" if manage_registrations else "我的申請"
 
     supplies = OfficeSupplyApplication.objects.all()
     equipment = EquipmentApplication.objects.all()
     if not manage_procurement:
         supplies = supplies.filter(applicant=user)
+    if not manage_equipment:
         equipment = equipment.filter(applicant=user)
     registrations = AssetRegistration.objects.all()
-    if not manage_assets:
+    if not manage_registrations:
         registrations = registrations.filter(applicant=user)
     approvals = visible_approval_requests(user, ApprovalRequest.objects.all())
     tasks = CollaborationTask.objects.select_related("assigned_department")
     if not manage_collaboration:
         tasks = tasks.filter(assigned_department=department) if department else tasks.none()
+    if not has_permission(user, "supplies.access"):
+        supplies = supplies.none()
+    if not has_permission(user, "equipment.access"):
+        equipment = equipment.none()
+    if not has_permission(user, "registrations.access"):
+        registrations = registrations.none()
+    if not has_permission(user, "collaboration.access"):
+        tasks = tasks.none()
 
     supply_pending = supplies.filter(status=OfficeSupplyApplication.Status.PENDING).count()
     equipment_processing = equipment.filter(
@@ -129,6 +142,7 @@ def build_dashboard(user):
         "display_name": (user.get_full_name() or "").strip() or user.get_username(),
         "hero_text": hero_text,
         "scope": scope,
+        "equipment_scope": equipment_scope,
         "asset_scope": asset_scope,
         "supply_pending": supply_pending,
         "equipment_processing": equipment_processing,
@@ -136,9 +150,12 @@ def build_dashboard(user):
         "approval_pending": approval_pending,
         "priority_approvals": priority[:5],
         "activities": activities[:5],
-        "can_apply": not manage_procurement and department is not None,
+        "can_apply": has_permission(user, "supplies.access") and not manage_procurement and department is not None,
+        "can_apply_equipment": has_permission(user, "equipment.access") and not manage_equipment and department is not None,
+        "can_manage_equipment": manage_equipment,
         "can_manage": manage_procurement,
-        "can_apply_registration": not manage_assets and department is not None,
+        "can_apply_registration": has_permission(user, "registrations.access") and not manage_registrations and department is not None,
+        "can_manage_registrations": manage_registrations,
         "can_manage_assets": manage_assets,
-        "can_create_approval": department is not None,
+        "can_create_approval": has_permission(user, "approvals.access") and department is not None,
     }

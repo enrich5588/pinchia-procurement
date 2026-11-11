@@ -77,6 +77,10 @@ M365_CERT_PRIVATE_KEY_PATH = os.environ.get("M365_CERT_PRIVATE_KEY_PATH", "")
 M365_CERT_THUMBPRINT = os.environ.get("M365_CERT_THUMBPRINT", "").strip()
 M365_REDIRECT_URI = os.environ.get("M365_REDIRECT_URI", "").strip()
 M365_ALLOW_GUESTS = env_bool("M365_ALLOW_GUESTS", False)
+M365_DEPARTMENT_SYNC_ENABLED = env_bool("M365_DEPARTMENT_SYNC_ENABLED", True)
+M365_DEPARTMENT_SYNC_SECONDS = max(60, int(os.environ.get("M365_DEPARTMENT_SYNC_SECONDS", "21600")))
+# Only the verified Graph UPN in the configured tenant can receive this role.
+M365_DEFAULT_ADMIN_UPN = os.environ.get("M365_DEFAULT_ADMIN_UPN", "tonychi@pin-chia.com").strip().casefold()
 ALLOW_LOCAL_LOGIN = env_bool("ALLOW_LOCAL_LOGIN", False)
 AUTHENTICATION_BACKENDS = ["organization.backends.MicrosoftBackend"]
 if ALLOW_LOCAL_LOGIN:

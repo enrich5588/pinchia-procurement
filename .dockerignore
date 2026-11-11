@@ -1,0 +1,15 @@
+.git
+.github
+.env
+.env.*
+.venv*
+.rebuild-verification
+.secrets
+**/__pycache__
+**/*.pyc
+**/*.sqlite3
+**/*.sqlite3-*
+private-media
+staticfiles
+backups
+deploy/*.env

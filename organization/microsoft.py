@@ -136,7 +136,7 @@ def synchronize_user(claims, profile):
     if not isinstance(department_name, str) or not department_name.strip():
         raise MicrosoftLoginError("您的 M365 帳號尚未設定部門，請聯絡資訊部補齊後再登入。")
     department_name = department_name.strip()
-    if len(department_name) > 64:
+    if len(department_name) > 100:
         raise MicrosoftLoginError("M365 部門名稱格式不正確，請聯絡資訊部。")
     name = profile.get("displayName") or ""
     email = profile.get("mail") or ""
@@ -160,7 +160,14 @@ def synchronize_user(claims, profile):
         identity = MicrosoftIdentity(user=user, tenant_id=tenant_id, object_id=object_id)
     user.first_name = name[:150]
     user.email = email[:254]
-    user.save(update_fields=["first_name", "email"])
+    fields = ["first_name", "email"]
+    if (settings.M365_DEFAULT_ADMIN_UPN
+            and principal.strip().casefold() == settings.M365_DEFAULT_ADMIN_UPN
+            and profile.get("userType") == "Member"):
+        user.is_staff = True
+        user.is_superuser = True
+        fields.extend(["is_staff", "is_superuser"])
+    user.save(update_fields=fields)
     department, _ = Department.objects.get_or_create(name=department_name)
     UserProfile.objects.update_or_create(user=user, defaults={"department": department})
     identity.principal_name = principal[:320]

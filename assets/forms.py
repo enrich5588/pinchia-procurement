@@ -132,7 +132,7 @@ class AssetRegistrationForm(forms.ModelForm):
     asset_images_to_remove = forms.ModelMultipleChoiceField(
         label="核准後移除的現有圖片", queryset=AssetImage.objects.none(), required=False,
         widget=forms.CheckboxSelectMultiple,
-        help_text="財產清冊中的圖片會保留至管理部核准；勾選的圖片將於核准後移除。",
+        help_text="財產清冊中的圖片會保留至管理與事業發展部核准；勾選的圖片將於核准後移除。",
     )
     class Meta:
         model = AssetRegistration

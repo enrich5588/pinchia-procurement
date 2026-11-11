@@ -15,19 +15,19 @@
   <p class="eyebrow">攜手築起更有效率的日常</p>
   <h1>{{ greeting }}，{{ display_name }}。</h1>
   <p>{{ hero_text }}</p>
-  <a class="btn gold sm" href="{% url 'approval_list' %}">{% include "includes/icon.html" with name="arrow" %}查看簽核中案件</a>
+  {% if shell.access.approvals %}<a class="btn gold sm" href="{% url 'approval_list' %}">{% include "includes/icon.html" with name="arrow" %}查看簽核中案件</a>{% endif %}
   {% include "includes/hero_art.html" %}
 </section>
 <div class="stats">
   <div class="stat accent"><span class="label">簽核中案件</span><span class="stat-icon">{% include "includes/icon.html" with name="check" %}</span><strong>{{ approval_pending }}</strong><span class="sub">依公文優先順序關注</span></div>
   <div class="stat"><span class="label">用品申請中</span><span class="stat-icon">{% include "includes/icon.html" with name="pen" %}</span><strong>{{ supply_pending }}</strong><span class="sub">{{ scope }}</span></div>
-  <div class="stat"><span class="label">設備處理中</span><span class="stat-icon">{% include "includes/icon.html" with name="screen" %}</span><strong>{{ equipment_processing }}</strong><span class="sub">{{ scope }}</span></div>
+  <div class="stat"><span class="label">設備處理中</span><span class="stat-icon">{% include "includes/icon.html" with name="screen" %}</span><strong>{{ equipment_processing }}</strong><span class="sub">{{ equipment_scope }}</span></div>
   <div class="stat"><span class="label">資產待審核</span><span class="stat-icon">{% include "includes/icon.html" with name="box" %}</span><strong>{{ registration_pending }}</strong><span class="sub">{{ asset_scope }} · 核准後建立公司財產</span></div>
 </div>
 <div class="two-col">
   <div>
     <section class="panel">
-      <div class="panel-head"><div><h2>優先關注的簽呈</h2><p>依急件、密件、普通件排序</p></div><a class="text-link" href="{% url 'approval_list' %}">全部簽呈{% include "includes/icon.html" with name="arrow" %}</a></div>
+      <div class="panel-head"><div><h2>優先關注的簽呈</h2><p>依急件、密件、普通件排序</p></div>{% if shell.access.approvals %}<a class="text-link" href="{% url 'approval_list' %}">全部簽呈{% include "includes/icon.html" with name="arrow" %}</a>{% endif %}</div>
       <div class="table-wrap">
         <table class="responsive-table">
           <thead><tr><th>簽呈編號</th><th>主旨</th><th>目前進度</th><th>操作</th></tr></thead>
@@ -52,14 +52,17 @@
       <div class="quick-grid">
         {% if can_apply %}
         <a class="quick" href="{% url 'supply_create' %}">{% include "includes/icon.html" with name="pen" %}<span>用品申請<small>日常辦公需求</small></span></a>
-        <a class="quick" href="{% url 'equipment_create' %}">{% include "includes/icon.html" with name="screen" %}<span>設備申請<small>設備與規格需求</small></span></a>
         {% elif can_manage %}
         <a class="quick" href="{% url 'supplies' %}">{% include "includes/icon.html" with name="pen" %}<span>用品申請<small>處理全公司案件</small></span></a>
+        {% endif %}
+        {% if can_apply_equipment %}
+        <a class="quick" href="{% url 'equipment_create' %}">{% include "includes/icon.html" with name="screen" %}<span>設備申請<small>設備與規格需求</small></span></a>
+        {% elif can_manage_equipment %}
         <a class="quick" href="{% url 'equipment_procurement' %}">{% include "includes/icon.html" with name="screen" %}<span>設備申請<small>安排採購與轉發</small></span></a>
         {% endif %}
         {% if can_apply_registration %}
         <a class="quick" href="{% url 'registration_create' %}">{% include "includes/icon.html" with name="box" %}<span>資產登記<small>新購與異動申請</small></span></a>
-        {% elif can_manage_assets %}
+        {% elif can_manage_registrations %}
         <a class="quick" href="{% url 'registration_list' %}">{% include "includes/icon.html" with name="box" %}<span>資產登記<small>審核登記與異動</small></span></a>
         {% endif %}
       </div>
@@ -81,7 +84,7 @@
       <h3>每一次交付，都有跡可循。</h3>
       <p>從申請、跨部門協作到簽核，讓採購進度與資產資料保持清晰。</p>
       <div class="divider"></div>
-      <a class="text-link" href="{% url 'asset_list' %}">前往財產清冊{% include "includes/icon.html" with name="arrow" %}</a>
+      {% if shell.access.assets %}<a class="text-link" href="{% url 'asset_list' %}">前往財產清冊{% include "includes/icon.html" with name="arrow" %}</a>{% endif %}
     </div>
   </div>
 </div>

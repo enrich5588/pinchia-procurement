@@ -31,7 +31,7 @@ def registration_workbook_upload(rows):
 
 class RegistrationBulkUploadTests(TestCase):
     def setUp(self):
-        self.management = Department.objects.create(name="管理部")
+        self.management = Department.objects.create(name="管理與事業發展部")
         self.it = Department.objects.create(name="資訊部")
         self.manager = User.objects.create_user("manager", password="x")
         self.staff = User.objects.create_user("tony", password="x")

@@ -11,10 +11,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **opts):
         depts = {n: Department.objects.get_or_create(name=n)[0]
-                 for n in ("資訊部", "都更事業部", "管理部")}
+                 for n in ("資訊部", "都更事業部", "管理與事業發展部")}
         plan = [("staff1", "資訊部", False), ("staff2", "都更事業部", False),
-                ("manager1", "管理部", False)]
-        plan.extend((name, "管理部", False) for name in APPROVAL_AUTHORITY_ORDER)
+                ("manager1", "管理與事業發展部", False)]
+        plan.extend((name, "管理與事業發展部", False) for name in APPROVAL_AUTHORITY_ORDER)
         for username, dept, _ in plan:
             u, created = User.objects.get_or_create(
                 username=username, defaults={"email": f"{username}@example.com"})

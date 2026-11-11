@@ -14,7 +14,7 @@ class AssetAccessTests(TestCase):
     def setUp(self):
         self.it = Department.objects.create(name="資訊部")
         self.business = Department.objects.create(name="都更事業部")
-        self.management = Department.objects.create(name="管理部")
+        self.management = Department.objects.create(name="管理與事業發展部")
         self.it_user = self._user("it_user", self.it)
         self.business_user = self._user("business_user", self.business)
         self.manager = self._user("manager", self.management)
@@ -124,7 +124,7 @@ class AssetAccessTests(TestCase):
 class AssetCreateTests(TestCase):
     def setUp(self):
         self.it = Department.objects.create(name="資訊部")
-        self.management = Department.objects.create(name="管理部")
+        self.management = Department.objects.create(name="管理與事業發展部")
         self.staff = self._user("staff", self.it)
         self.manager = self._user("manager", self.management)
 

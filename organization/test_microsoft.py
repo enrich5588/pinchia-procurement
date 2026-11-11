@@ -232,7 +232,7 @@ class MicrosoftIdentityTests(TestCase):
         self.assertEqual(MicrosoftIdentity.objects.count(), 1)
 
     def test_empty_department_guests_or_mismatched_ids_never_create_users(self):
-        for changes in [{"department": None}, {"department": "  "}, {"department": "x" * 65},
+        for changes in [{"department": None}, {"department": "  "}, {"department": "x" * 101},
                         {"userType": "Guest"}, {"userType": None}, {"id": str(uuid4())}]:
             with self.subTest(changes=changes):
                 with self.assertRaises(MicrosoftLoginError):
@@ -264,7 +264,7 @@ class MicrosoftIdentityTests(TestCase):
         user.is_active = False
         user.save()
         with self.assertRaises(MicrosoftLoginError):
-            synchronize_user(claims(), profile(department="管理部"))
+            synchronize_user(claims(), profile(department="管理與事業發展部"))
         self.assertEqual(user.profile.department.name, "資訊部")
 
     def test_identity_binding_is_unique_and_cannot_silently_move(self):
@@ -281,6 +281,46 @@ class MicrosoftIdentityTests(TestCase):
         with self.assertRaises(IntegrityError), transaction.atomic():
             MicrosoftIdentity.objects.create(user=second, tenant_id=TENANT, object_id=OBJECT)
         self.assertEqual(MicrosoftIdentity.objects.get().user_id, first.pk)
+
+
+@override_settings(**SETTINGS)
+class DefaultAdminTests(TestCase):
+    def test_verified_member_upn_grants_admin_and_preserves_identity(self):
+        user = synchronize_user(claims(), profile(userPrincipalName="TonyChi@pin-chia.com"))
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.is_staff)
+        self.assertFalse(user.has_usable_password())
+        again = synchronize_user(claims(), profile(userPrincipalName="tonychi@pin-chia.com"))
+        self.assertEqual(again.pk, user.pk)
+
+    def test_mail_alias_does_not_grant_admin(self):
+        user = synchronize_user(claims(), profile(mail="tonychi@pin-chia.com"))
+        self.assertFalse(user.is_superuser)
+        self.assertFalse(user.is_staff)
+
+    @override_settings(M365_ALLOW_GUESTS=True)
+    def test_guest_cannot_receive_default_admin(self):
+        user = synchronize_user(claims(), profile(userPrincipalName="tonychi@pin-chia.com", userType="Guest"))
+        self.assertFalse(user.is_superuser)
+
+    @override_settings(M365_DEFAULT_ADMIN_UPN="")
+    def test_empty_setting_disables_assignment(self):
+        user = synchronize_user(claims(), profile(userPrincipalName="tonychi@pin-chia.com"))
+        self.assertFalse(user.is_superuser)
+
+    def test_wrong_tenant_cannot_receive_admin(self):
+        with self.assertRaises(MicrosoftLoginError):
+            synchronize_user(claims(tid=str(uuid4())), profile(userPrincipalName="tonychi@pin-chia.com"))
+        self.assertFalse(get_user_model().objects.exists())
+
+    def test_disabled_default_admin_is_not_reactivated(self):
+        user = synchronize_user(claims(), profile(userPrincipalName="tonychi@pin-chia.com"))
+        user.is_active = False
+        user.save(update_fields=["is_active"])
+        with self.assertRaises(MicrosoftLoginError):
+            synchronize_user(claims(), profile(userPrincipalName="tonychi@pin-chia.com"))
+        user.refresh_from_db()
+        self.assertFalse(user.is_active)
 
 
 @override_settings(**SETTINGS)

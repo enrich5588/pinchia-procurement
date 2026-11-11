@@ -1,4 +1,4 @@
 <div class="tabs" aria-label="採購申請專區分頁">
-  <a class="tab{% if active_procurement_tab == 'supplies' %} active{% endif %}" href="{% url 'supplies' %}"{% if active_procurement_tab == "supplies" %} aria-current="page"{% endif %}>辦公用品申請</a>
-  <a class="tab{% if active_procurement_tab == 'equipment' %} active{% endif %}" href="{% url 'equipment_procurement' %}"{% if active_procurement_tab == "equipment" %} aria-current="page"{% endif %}>設備申請</a>
+  {% if shell.access.supplies %}<a class="tab{% if active_procurement_tab == 'supplies' %} active{% endif %}" href="{% url 'supplies' %}"{% if active_procurement_tab == "supplies" %} aria-current="page"{% endif %}>辦公用品申請</a>{% endif %}
+  {% if shell.access.equipment %}<a class="tab{% if active_procurement_tab == 'equipment' %} active{% endif %}" href="{% url 'equipment_procurement' %}"{% if active_procurement_tab == "equipment" %} aria-current="page"{% endif %}>設備申請</a>{% endif %}
 </div>

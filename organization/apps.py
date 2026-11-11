@@ -12,3 +12,6 @@ class OrganizationConfig(AppConfig):
     # Keep the existing table names, migration history and content types.
     label = "platform_stub"
     verbose_name = "組織與帳號"
+
+    def ready(self):
+        from . import signals  # noqa: F401

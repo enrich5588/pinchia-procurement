@@ -54,7 +54,7 @@ class DepartmentManagerTests(TestCase):
         call_command("seed_department_managers", verbosity=0)
 
         expected = {
-            "management_manager": "管理部",
+            "management_manager": "管理與事業發展部",
             "it_manager": "資訊部",
             "renewal_manager": "都更事業部",
         }
@@ -71,7 +71,7 @@ class DepartmentManagerTests(TestCase):
 
     def test_manager_assignment_requires_matching_department(self):
         info = Department.objects.create(name="資訊部")
-        management = Department.objects.create(name="管理部")
+        management = Department.objects.create(name="管理與事業發展部")
         user = User.objects.create_user("wrong_manager", password="demo")
         UserProfile.objects.create(user=user, department=info)
 

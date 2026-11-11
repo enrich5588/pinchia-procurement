@@ -51,7 +51,7 @@ GET https://graph.microsoft.com/v1.0/me?$select=id,displayName,userPrincipalName
 6. 新建帳號有不可使用的本機密碼，且不自動取得 Django staff／superuser。新帳號的 username 優先使用 UPN；若重複或過長則採不衝突的識別名稱。後續以穩定的 Tenant ID＋Object ID 找回同一帳號，UPN 或信箱變更不會改綁帳號。
 7. 成功登入的本機 Session 有效 8 小時；部門於每次 M365 登入同步。此版本沒有背景全員目錄同步，也不會讓尚未登入的人員自動出現在保管人選單。
 
-現有業務權限仍按部門與既有主管／簽核設定判斷。例如管理部名稱目前為 `管理部`，需確認 Graph 回傳相同正式名稱。Django 管理員、部門主管與簽核層級並不因登入而自動新增。
+部門正式名稱為 `管理與事業發展部`，由 Graph `user.department` 同步。業務權限依「個人設定 → 部門設定 → 系統預設」判斷，設定方式見 [權限管理說明](PERMISSIONS.md)。預設管理員 `tonychi@pin-chia.com`（`M365_DEFAULT_ADMIN_UPN`）經公司租用戶與 Graph 成員身分驗證後，自動取得系統管理員權限；其他帳號維持一般權限，既有主管或指定簽核人設定不變。
 
 站內登出會清除本系統 Session 並回登入頁；不登出其他 Microsoft 365 應用程式。再次點 M365 登入可能使用既有 Microsoft SSO，並顯示帳號選擇。
 

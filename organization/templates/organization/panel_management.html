@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}面板管理｜品嘉建設集團{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'organization/panels.css' %}">{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">系統管理</p><h1>面板管理</h1><p class="subtitle">管理各功能的開發與開放狀態，讓同仁使用已準備好的功能。</p></div><span class="badge">{{ open_count }} / 6 個面板已開放</span></div>
+<section class="panel"><div class="panel-body"><p>開放對象為已登入的公司同仁，仍須符合部門與個人權限。開發中或暫不開放的面板，僅系統管理員可進入驗證；一般同仁的導覽、首頁資料與操作入口會隱藏，直接存取網址也會拒絕。</p><p class="small muted">「已開放」代表由管理員確認可供使用；系統不會自動判定功能是否開發完成。變更於後續請求生效，既有案件與權限設定保留。</p>{% if not global_open %}<p class="hint warning">目前全站功能開關 FEATURE_OPEN_TO_ALL 為關閉；即使面板設為已開放，一般同仁仍無法進入。</p>{% endif %}</div></section>
+<form method="post" class="panel-settings">{% csrf_token %}{{ panel_form.revision }}
+  <div class="panel-form-errors" role="status">{{ panel_form.non_field_errors }}{{ panel_form.revision.errors }}</div>
+  <div class="panel-grid">{% for item in panels %}<section class="panel panel-card">
+    <div class="panel-head"><div class="panel-name">{% include "includes/icon.html" with name=item.icon %}<h2>{{ item.label }}</h2></div><span class="panel-status status-{{ item.panel.status }}">{% if item.panel %}{{ item.panel.get_status_display }}{% else %}尚未設定{% endif %}</span></div>
+    <div class="panel-body"><p class="muted">{{ item.description }}</p><div class="field">{{ item.field.label_tag }}{{ item.field }}{{ item.field.errors }}</div><p class="small muted">{% if item.panel.updated_by %}最後設定：{{ item.panel.updated_by.get_username }} · {{ item.panel.updated_at|date:"Y/m/d H:i" }}{% else %}沿用升級前的開放設定{% endif %}</p></div>
+  </section>{% endfor %}</div>
+  <div class="form-actions"><button type="submit" class="btn">儲存面板設定</button><a class="btn secondary" href="{% url 'panel_management' %}">重新載入</a></div>
+</form>
+<section class="panel"><div class="panel-head"><h2>最近面板異動</h2></div><div class="panel-body">{% for audit in history %}<div class="panel-audit"><strong>{{ audit.target_label }}</strong><span>{{ audit.created_at|date:"Y/m/d H:i:s" }} · {{ audit.actor_label }}</span>{% for key, change in audit.changes.items %}<p>{% if change.before == 'open' %}已開放{% elif change.before == 'ready' %}已完成・暫不開放{% else %}開發中{% endif %} → {% if change.after == 'open' %}已開放{% elif change.after == 'ready' %}已完成・暫不開放{% else %}開發中{% endif %}</p>{% endfor %}</div>{% empty %}<p class="muted">尚無面板異動紀錄。</p>{% endfor %}</div></section>
+{% endblock %}
