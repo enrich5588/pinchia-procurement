@@ -4,7 +4,8 @@ from urllib.parse import urlencode
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
-from django.test import Client, TestCase
+from django.test import Client
+from organization.testing import OpenPanelsTestCase
 from django.urls import reverse
 from django.utils import timezone
 
@@ -17,7 +18,7 @@ from .permission_service import explicit_rules, revision_for, save_permissions
 from .permissions import has_permission
 
 
-class PermissionTests(TestCase):
+class PermissionTests(OpenPanelsTestCase):
     def setUp(self):
         User = get_user_model()
         self.department = Department.objects.create(name="資訊部")
@@ -51,10 +52,12 @@ class PermissionTests(TestCase):
 
     def test_official_department_receives_default_management_grants(self):
         for check in [can_manage_assets, can_manage_registrations, can_manage_office_supply_applications,
-                      can_manage_equipment_applications, can_monitor_database]:
+                      can_manage_equipment_applications]:
             self.assertTrue(check(self.manager))
             self.assertFalse(check(self.user))
         self.assertFalse(has_permission(self.manager, "approvals.view_all"))
+        self.assertFalse(can_monitor_database(self.manager))
+        self.assertTrue(can_monitor_database(self.admin))
 
     def test_directory_lists_targets_without_target_dropdown(self):
         self.client.force_login(self.admin)
@@ -250,11 +253,34 @@ class PermissionTests(TestCase):
         self.assertFalse(can_manage_equipment_applications(self.user))
 
     def test_personal_grant_can_be_revoked_without_new_login(self):
-        self.rule("database.monitor", "allow", user=self.user)
+        self.rule("assets.access", "allow", user=self.user)
         self.client.force_login(self.user)
-        self.assertEqual(self.client.get(reverse("database_monitor")).status_code, 200)
-        self.rule("database.monitor", "deny", user=self.user)
-        self.assertEqual(self.client.get(reverse("database_monitor")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("asset_list")).status_code, 200)
+        self.rule("assets.access", "deny", user=self.user)
+        self.assertEqual(self.client.get(reverse("asset_list")).status_code, 403)
+
+    def test_entire_system_management_is_superuser_only_even_with_explicit_grants(self):
+        self.rule("database.monitor", "allow", department=self.management)
+        for user in [self.user, self.manager]:
+            user.is_staff = True
+            user.save(update_fields=["is_staff"])
+            self.rule("database.monitor", "allow", user=user)
+            self.client.force_login(user)
+            response = self.client.get(reverse("home"))
+            for text in ["系統管理</div>", "資料庫監看", "權限管理", "面板管理"]:
+                self.assertNotContains(response, text)
+            for route in ["database_monitor", "permission_management", "panel_management"]:
+                for method in [self.client.get, self.client.post]:
+                    self.assertEqual(method(reverse(route)).status_code, 403)
+            self.assertFalse(can_monitor_database(user))
+            self.assertEqual(self.client.get(reverse("admin:index")).status_code, 302)
+        self.client.force_login(self.admin)
+        response = self.client.get(reverse("home"))
+        for text in ["資料庫監看", "權限管理", "面板管理"]:
+            self.assertContains(response, text)
+        for route in ["database_monitor", "permission_management", "panel_management"]:
+            self.assertEqual(self.client.get(reverse(route)).status_code, 200)
+        self.assertEqual(self.client.get(reverse("admin:index")).status_code, 200)
 
     def test_approval_read_all_never_grants_someone_elses_signature(self):
         from approval_hub.models import ApprovalRequest, ApprovalStep
@@ -343,7 +369,7 @@ class PermissionTests(TestCase):
             PermissionRule.objects.create(user=self.user, permission="assets.access", effect="deny")
 
 
-class ManagementMigrationTests(TestCase):
+class ManagementMigrationTests(OpenPanelsTestCase):
     def migrate_defaults(self):
         from importlib import import_module
         from django.apps import apps

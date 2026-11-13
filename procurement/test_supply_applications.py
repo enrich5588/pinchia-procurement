@@ -2,7 +2,8 @@ from datetime import date
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
-from django.test import Client, TestCase
+from django.test import Client
+from organization.testing import OpenPanelsTestCase
 from django.urls import reverse
 
 from organization.models import Department, UserProfile
@@ -11,7 +12,7 @@ from .forms import OfficeSupplyApplicationForm
 from .models import OfficeSupplyApplication, OfficeSupplyApplicationItem
 
 
-class OfficeSupplyApplicationTests(TestCase):
+class OfficeSupplyApplicationTests(OpenPanelsTestCase):
     def setUp(self):
         self.it = Department.objects.create(name="資訊部")
         self.business = Department.objects.create(name="都更事業部")

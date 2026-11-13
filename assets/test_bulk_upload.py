@@ -3,7 +3,8 @@ from zipfile import ZipFile
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import Client, TestCase
+from django.test import Client
+from organization.testing import OpenPanelsTestCase
 from django.urls import reverse
 from openpyxl import Workbook, load_workbook
 
@@ -37,7 +38,7 @@ def workbook_upload(rows):
     )
 
 
-class AssetBulkUploadTests(TestCase):
+class AssetBulkUploadTests(OpenPanelsTestCase):
     def setUp(self):
         self.management = Department.objects.create(name="管理與事業發展部")
         self.it = Department.objects.create(name="資訊部")

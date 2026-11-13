@@ -139,6 +139,8 @@ def permission_management(request):
                                   else rules.get(access_code, "allow") == "allow")
                 if not access_allowed:
                     allowed, source = False, "功能進入已拒絕"
+            if code == "database.monitor" and scope == "department":
+                allowed, source = False, "系統管理員專用"
             rows.append({"field": form[code], "description": description, "allowed": allowed,
                          "source": source, "default": default})
         history = PermissionAudit.objects.filter(target_type=scope, target_id=target.pk)[:20]

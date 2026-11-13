@@ -11,6 +11,8 @@ def resolve_permission(user, code):
         return False, "未登入、停用或未知權限"
     if user.is_superuser:
         return True, "系統管理員"
+    if code == "database.monitor":
+        return False, "系統管理員專用"
     panel = code.split(".")[0]
     if panel in PANEL_KEYS and not panel_available(user, panel):
         return False, "面板未開放"

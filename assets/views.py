@@ -959,7 +959,7 @@ def registration_bulk_approve(request):
 @feature_required
 def database_monitor(request):
     if not can_monitor_database(request.user):
-        raise PermissionDenied("只有管理與事業發展部人員與系統管理員可查看資料庫狀態。")
+        raise PermissionDenied("只有系統管理員可查看資料庫狀態。")
 
     refresh_seconds = request.GET.get("refresh", DATABASE_MONITOR_DEFAULT_REFRESH)
     allowed_refresh_values = {value for value, _ in DATABASE_MONITOR_REFRESH_OPTIONS}

@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
-from django.test import TestCase
+from organization.testing import OpenPanelsTestCase
 from django.urls import reverse
 from django.utils import timezone
 
@@ -21,7 +21,7 @@ from .services import (
 )
 
 
-class ApprovalWorkflowTests(TestCase):
+class ApprovalWorkflowTests(OpenPanelsTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.department = Department.objects.create(name="測試部")

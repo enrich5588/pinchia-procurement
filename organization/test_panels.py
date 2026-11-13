@@ -23,6 +23,8 @@ class PanelTests(TestCase):
         for user in [self.user, self.manager]:
             UserProfile.objects.create(user=user, department=self.department)
         self.url = reverse('panel_management')
+        # Permission and release-transition scenarios explicitly start with open panels.
+        FeaturePanel.objects.update(status=FeaturePanel.Status.OPEN)
 
     def values(self, **changes):
         return {**dict(FeaturePanel.objects.values_list('code', 'status')), **changes}
@@ -31,7 +33,7 @@ class PanelTests(TestCase):
         return save_panels(actor or self.admin, values,
                            revision if revision is not None else revision_for(self.values()))
 
-    def test_existing_six_panels_remain_open_after_upgrade(self):
+    def test_all_six_panels_can_be_explicitly_opened(self):
         self.assertEqual(set(FeaturePanel.objects.values_list('code', flat=True)), PANEL_KEYS)
         self.assertEqual(FeaturePanel.objects.filter(status='open').count(), 6)
 
@@ -138,3 +140,67 @@ class PanelTests(TestCase):
         FeaturePanel.objects.filter(code='assets').delete()
         self.assertFalse(has_permission(self.user, 'assets.access'))
         self.assertFalse(FeaturePanel.objects.filter(code='assets').exists())
+
+
+class PanelDefaultTests(TestCase):
+    def apply_defaults(self):
+        from importlib import import_module
+        from types import SimpleNamespace
+        from django.apps import apps
+        from django.db import connection
+        migration = import_module('organization.migrations.0008_panels_developing_defaults')
+        migration.default_panels_to_developing(apps, SimpleNamespace(connection=connection))
+
+    def test_fresh_install_initializes_all_six_panels_as_developing(self):
+        self.assertEqual(set(FeaturePanel.objects.values_list('code', flat=True)), PANEL_KEYS)
+        self.assertEqual(FeaturePanel.objects.filter(status='developing').count(), 6)
+        user = get_user_model().objects.create_user('default-panel-user')
+        self.client.force_login(user)
+        for code, route in [('supplies', 'supplies'), ('equipment', 'equipment_procurement'),
+                            ('assets', 'asset_list'), ('registrations', 'registration_list'),
+                            ('collaboration', 'collaboration_task_list'), ('approvals', 'approval_list')]:
+            with self.subTest(code=code):
+                self.assertFalse(panel_available(user, code))
+                self.assertEqual(self.client.get(reverse(route)).status_code, 403)
+
+    def test_upgrade_only_changes_untouched_open_defaults_and_is_repeatable(self):
+        admin = get_user_model().objects.create_superuser('default-panel-admin')
+        FeaturePanel.objects.update(status='open')
+        FeaturePanel.objects.filter(code='assets').update(updated_by=admin)
+        FeaturePanel.objects.filter(code='equipment').update(status='ready')
+        panel = FeaturePanel.objects.get(code='approvals')
+        PermissionAudit.objects.create(
+            actor=None, actor_label='Former administrator', target_type='panel',
+            target_id=panel.pk, target_label='數位簽呈',
+            changes={'status': {'before': 'developing', 'after': 'open'}},
+        )
+        FeaturePanel.objects.filter(code='registrations').delete()
+        self.apply_defaults()
+        expected = dict(supplies='developing', equipment='ready', assets='open',
+                        registrations='developing', collaboration='developing', approvals='open')
+        self.assertEqual(dict(FeaturePanel.objects.values_list('code', 'status')), expected)
+        self.apply_defaults()
+        self.assertEqual(dict(FeaturePanel.objects.values_list('code', 'status')), expected)
+
+    def test_new_panel_model_default_is_developing(self):
+        panel = FeaturePanel.objects.create(code='future-panel')
+        self.assertEqual(panel.status, FeaturePanel.Status.DEVELOPING)
+
+    def test_system_management_stays_admin_only_with_all_panels_developing(self):
+        admin = get_user_model().objects.create_superuser('system-panel-admin')
+        staff = get_user_model().objects.create_user('system-panel-staff', is_staff=True)
+        department = Department.objects.create(name='管理與事業發展部')
+        UserProfile.objects.create(user=staff, department=department)
+        PermissionRule.objects.create(user=staff, permission='database.monitor', effect='allow')
+        for user, allowed in [(staff, False), (admin, True)]:
+            self.client.force_login(user)
+            response = self.client.get(reverse('home'))
+            for text in ['系統管理</div>', '資料庫監看', '權限管理', '面板管理']:
+                if allowed:
+                    self.assertContains(response, text)
+                else:
+                    self.assertNotContains(response, text)
+            for route in ['database_monitor', 'permission_management', 'panel_management']:
+                self.assertEqual(self.client.get(reverse(route)).status_code, 200 if allowed else 403)
+                if not allowed:
+                    self.assertEqual(self.client.post(reverse(route), {}).status_code, 403)

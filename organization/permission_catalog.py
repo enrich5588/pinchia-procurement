@@ -15,11 +15,11 @@ PERMISSIONS = (
     ("collaboration.manage", "協作案件：統籌", "查看全公司協作案件、轉發需求與撤回。", False),
     ("approvals.access", "數位簽呈：進入", "提出簽呈、查看本人或本人參與簽核的案件。", True),
     ("approvals.view_all", "數位簽呈：全公司閱覽", "查看全公司簽呈，不包含代替他人簽核。", False),
-    ("database.monitor", "資料庫：唯讀監看", "查看資料表、欄位及完整業務資料；不含修改。", False),
+    ("database.monitor", "資料庫：唯讀監看", "僅系統管理員可使用；部門及個人授權無法開放。", False),
 )
 PERMISSION_CHOICES = [(code, label) for code, label, _, _ in PERMISSIONS]
 DEFAULTS = {code: default for code, _, _, default in PERMISSIONS}
 MANAGEMENT_GRANTS = (
     "supplies.manage", "equipment.manage", "assets.manage", "registrations.manage",
-    "collaboration.manage", "database.monitor",
+    "collaboration.manage",
 )

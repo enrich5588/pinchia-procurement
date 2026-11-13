@@ -3,7 +3,8 @@ from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
-from django.test import Client, TestCase
+from django.test import Client
+from organization.testing import OpenPanelsTestCase
 from django.urls import reverse
 
 from organization.models import Department, UserProfile
@@ -12,7 +13,7 @@ from procurement.models import EquipmentApplication, EquipmentApplicationItem
 from .models import CollaborationTask
 
 
-class CollaborationTaskTests(TestCase):
+class CollaborationTaskTests(OpenPanelsTestCase):
     def setUp(self):
         self.management = Department.objects.create(name="管理與事業發展部")
         self.it = Department.objects.create(name="資訊部")

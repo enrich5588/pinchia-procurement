@@ -35,3 +35,5 @@ class PermissionEditForm(forms.Form):
                 label=label, help_text=description,
                 choices=[("inherit", "繼承"), ("allow", "允許"), ("deny", "拒絕")],
             )
+            if code == "database.monitor":
+                self.fields[code].disabled = True

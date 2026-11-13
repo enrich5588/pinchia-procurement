@@ -11,7 +11,8 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from django.contrib.auth import authenticate, get_user_model
 from django.core.management import call_command, CommandError
 from django.db import IntegrityError, transaction
-from django.test import Client, SimpleTestCase, TestCase, override_settings
+from django.test import Client, SimpleTestCase, override_settings
+from organization.testing import OpenPanelsTestCase
 from django.urls import reverse
 
 from .auth_views import FLOW_KEY
@@ -43,7 +44,7 @@ def profile(**changes):
 
 
 @override_settings(**SETTINGS)
-class MicrosoftFlowTests(TestCase):
+class MicrosoftFlowTests(OpenPanelsTestCase):
     def setUp(self):
         self.sdk_patch = patch("organization.auth_views.build_client")
         self.sdk = self.sdk_patch.start().return_value
@@ -221,7 +222,7 @@ class MicrosoftFlowTests(TestCase):
 
 
 @override_settings(**SETTINGS)
-class MicrosoftIdentityTests(TestCase):
+class MicrosoftIdentityTests(OpenPanelsTestCase):
     def test_repeat_login_updates_department_without_changing_user_or_identity(self):
         user = synchronize_user(claims(), profile())
         second = synchronize_user(claims(), profile(department="都更事業部", userPrincipalName="new@company.example"))
@@ -284,7 +285,7 @@ class MicrosoftIdentityTests(TestCase):
 
 
 @override_settings(**SETTINGS)
-class DefaultAdminTests(TestCase):
+class DefaultAdminTests(OpenPanelsTestCase):
     def test_verified_member_upn_grants_admin_and_preserves_identity(self):
         user = synchronize_user(claims(), profile(userPrincipalName="TonyChi@pin-chia.com"))
         self.assertTrue(user.is_superuser)
@@ -324,7 +325,7 @@ class DefaultAdminTests(TestCase):
 
 
 @override_settings(**SETTINGS)
-class MicrosoftServiceTests(TestCase):
+class MicrosoftServiceTests(OpenPanelsTestCase):
     def test_configuration_rejects_invalid_or_insecure_urls(self):
         for uri in ["http://company.example/accounts/microsoft/callback/", "https://testserver/wrong/",
                     "https://testserver/accounts/microsoft/callback/?next=evil", "https://[bad"]:

@@ -5,7 +5,8 @@
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
-from django.test import Client, TestCase
+from django.test import Client
+from organization.testing import OpenPanelsTestCase
 from django.urls import reverse
 
 from organization.models import Department, UserProfile
@@ -13,7 +14,7 @@ from organization.models import Department, UserProfile
 from .models import DepartmentManager, is_department_manager
 
 
-class SmokeTests(TestCase):
+class SmokeTests(OpenPanelsTestCase):
 
     def setUp(self):
         self.user = User.objects.create_user("t1", "t1@example.com", "x")
@@ -48,7 +49,7 @@ class SmokeTests(TestCase):
         self.assertContains(response, 'aria-current="page"')
 
 
-class DepartmentManagerTests(TestCase):
+class DepartmentManagerTests(OpenPanelsTestCase):
     def test_seed_creates_three_idempotent_manager_accounts(self):
         call_command("seed_department_managers", verbosity=0)
         call_command("seed_department_managers", verbosity=0)

@@ -36,13 +36,12 @@
 {% if shell.access.collaboration %}    <a class="nav-link{% if shell.section == 'collaboration' %} active{% endif %}" href="{% url 'collaboration_task_list' %}"{% if shell.section == 'collaboration' %} aria-current="page"{% endif %}>{% include "includes/icon.html" with name="users" %}<span>協作案件</span></a>{% endif %}
     <div class="nav-label">簽核管理</div>
 {% if shell.access.approvals %}    <a class="nav-link{% if shell.section == 'approvals' %} active{% endif %}" href="{% url 'approval_list' %}"{% if shell.section == 'approvals' %} aria-current="page"{% endif %}>{% include "includes/icon.html" with name="check" %}<span>數位簽呈</span>{% if shell.pending_approvals %}<span class="count">{{ shell.pending_approvals }}</span>{% endif %}</a>{% endif %}
-    {% can_monitor_database user as show_database_monitor %}
-    {% if show_database_monitor %}
+    {% if user.is_superuser %}
     <div class="nav-label">系統管理</div>
     <a class="nav-link{% if shell.section == 'monitor' %} active{% endif %}" href="{% url 'database_monitor' %}"{% if shell.section == 'monitor' %} aria-current="page"{% endif %}>{% include "includes/icon.html" with name="database" %}<span>資料庫監看</span></a>
+    <a class="nav-link{% if shell.section == 'permissions' %} active{% endif %}" href="{% url 'permission_management' %}">{% include "includes/icon.html" with name="shield" %}<span>權限管理</span></a>
+    <a class="nav-link{% if shell.section == 'panels' %} active{% endif %}" href="{% url 'panel_management' %}">{% include "includes/icon.html" with name="screen" %}<span>面板管理</span></a>
     {% endif %}
-    {% if user.is_superuser %}<a class="nav-link{% if shell.section == 'permissions' %} active{% endif %}" href="{% url 'permission_management' %}">{% include "includes/icon.html" with name="shield" %}<span>權限管理</span></a>{% endif %}
-    {% if user.is_superuser %}<a class="nav-link{% if shell.section == 'panels' %} active{% endif %}" href="{% url 'panel_management' %}">{% include "includes/icon.html" with name="screen" %}<span>面板管理</span></a>{% endif %}
   </nav>
   <div class="nav-bottom">
     <div class="nav-foot">

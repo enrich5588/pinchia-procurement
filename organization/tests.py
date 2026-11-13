@@ -13,6 +13,7 @@ from django.urls import reverse
 
 from config.env import env_bool, load_env
 from organization.models import Department, UserProfile
+from organization.testing import OpenPanelsTestCase
 
 
 class EnvironmentTests(SimpleTestCase):
@@ -38,7 +39,7 @@ class EnvironmentTests(SimpleTestCase):
                 env_bool("FEATURE_OPEN_TO_ALL")
 
 
-class StandaloneProjectTests(TestCase):
+class StandaloneProjectTests(OpenPanelsTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.department = Department.objects.create(name="資訊部")

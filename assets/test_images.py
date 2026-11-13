@@ -7,7 +7,7 @@ from PIL import Image
 from django.contrib.auth.models import User
 from django.core.files.storage import FileSystemStorage
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from organization.testing import OpenPanelsTestCase
 from django.urls import reverse
 
 from organization.models import Department, UserProfile
@@ -20,7 +20,7 @@ def picture(name="photo.png"):
     return SimpleUploadedFile(name, data.getvalue(), content_type="image/png")
 
 
-class AssetImageTests(TestCase):
+class AssetImageTests(OpenPanelsTestCase):
     def setUp(self):
         self.directory = TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)

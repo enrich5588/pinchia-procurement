@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.core.files.storage import FileSystemStorage
-from django.test import TestCase
+from organization.testing import OpenPanelsTestCase
 from django.urls import reverse
 
 from organization.models import Department, UserProfile
@@ -13,7 +13,7 @@ from .models import Asset, AssetImage, AssetRegistration
 from .test_images import picture
 
 
-class AssetRevisionTests(TestCase):
+class AssetRevisionTests(OpenPanelsTestCase):
     def setUp(self):
         directory = TemporaryDirectory()
         self.addCleanup(directory.cleanup)

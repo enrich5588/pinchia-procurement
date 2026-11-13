@@ -1,7 +1,8 @@
 from datetime import date
 
 from django.contrib.auth.models import User
-from django.test import Client, TestCase
+from django.test import Client
+from organization.testing import OpenPanelsTestCase
 from django.urls import reverse
 
 from organization.models import Department, UserProfile
@@ -10,7 +11,7 @@ from .forms import AssetForm
 from .models import Asset
 
 
-class AssetAccessTests(TestCase):
+class AssetAccessTests(OpenPanelsTestCase):
     def setUp(self):
         self.it = Department.objects.create(name="資訊部")
         self.business = Department.objects.create(name="都更事業部")
@@ -121,7 +122,7 @@ class AssetAccessTests(TestCase):
                 )
 
 
-class AssetCreateTests(TestCase):
+class AssetCreateTests(OpenPanelsTestCase):
     def setUp(self):
         self.it = Department.objects.create(name="資訊部")
         self.management = Department.objects.create(name="管理與事業發展部")

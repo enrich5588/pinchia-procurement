@@ -2,7 +2,8 @@ from datetime import date
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
-from django.test import Client, TestCase
+from django.test import Client
+from organization.testing import OpenPanelsTestCase
 from django.urls import reverse
 
 from organization.models import Department, UserProfile
@@ -11,7 +12,7 @@ from .forms import AssetRegistrationForm
 from .models import Asset, AssetRegistration
 
 
-class AssetRegistrationTests(TestCase):
+class AssetRegistrationTests(OpenPanelsTestCase):
     def setUp(self):
         self.it = Department.objects.create(name="資訊部")
         self.business = Department.objects.create(name="都更事業部")
@@ -315,12 +316,13 @@ class AssetRegistrationTests(TestCase):
         self.assertContains(response, f'value="{item.pk}"', html=False)
 
 
-class DatabaseMonitorTests(TestCase):
+class DatabaseMonitorTests(OpenPanelsTestCase):
     def setUp(self):
         self.management = Department.objects.create(name="管理與事業發展部")
         self.it = Department.objects.create(name="資訊部")
         self.manager = User.objects.create_user("monitor_manager", password="x")
         self.staff = User.objects.create_user("monitor_staff", password="x")
+        self.admin = User.objects.create_superuser("monitor_admin", password="x")
         UserProfile.objects.create(user=self.manager, department=self.management)
         UserProfile.objects.create(user=self.staff, department=self.it)
 
@@ -329,11 +331,13 @@ class DatabaseMonitorTests(TestCase):
         client.force_login(user)
         return client
 
-    def test_monitor_is_management_only_and_navigation_is_hidden_from_staff(self):
+    def test_monitor_is_superuser_only_and_hidden_from_other_departments(self):
         url = reverse("database_monitor")
         self.assertEqual(self._client(self.staff).get(url).status_code, 403)
         self.assertNotContains(self._client(self.staff).get(reverse("asset_list")), url)
-        self.assertContains(self._client(self.manager).get(reverse("asset_list")), url)
+        self.assertEqual(self._client(self.manager).get(url).status_code, 403)
+        self.assertNotContains(self._client(self.manager).get(reverse("asset_list")), url)
+        self.assertContains(self._client(self.admin).get(reverse("asset_list")), url)
 
     def test_monitor_lists_tables_and_counts_without_writing(self):
         registration = AssetRegistration.objects.create(
@@ -342,7 +346,7 @@ class DatabaseMonitorTests(TestCase):
             purchase_date=date(2026, 8, 24), applicant=self.staff,
         )
         before = AssetRegistration.objects.count()
-        response = self._client(self.manager).get(reverse("database_monitor"))
+        response = self._client(self.admin).get(reverse("database_monitor"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "assets_assetregistration")
         self.assertContains(response, "唯讀")
@@ -361,7 +365,7 @@ class DatabaseMonitorTests(TestCase):
         self.assertEqual(AssetRegistration.objects.count(), before)
 
     def test_invalid_refresh_interval_falls_back_to_fifteen_seconds(self):
-        response = self._client(self.manager).get(
+        response = self._client(self.admin).get(
             reverse("database_monitor"), {"refresh": "1"}
         )
         self.assertEqual(response.context["refresh_seconds"], "15")
