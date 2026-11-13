@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}操作紀錄｜品嘉建設集團{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">系統管理</p><h1>操作紀錄</h1><p class="subtitle">保留最近 30 天的操作、操作者與修改前後內容；每小時清理逾期紀錄。</p></div></div>
+<section class="panel"><div class="panel-body"><form method="get" class="form-grid">
+<div class="field"><label for="log-q">搜尋人員、資料名稱、編號或路徑</label><input id="log-q" type="search" name="q" value="{{ query }}" maxlength="200"></div>
+<div class="field"><label for="log-action">操作類型</label><select id="log-action" name="action"><option value="">全部操作</option>{% for value,label in actions %}<option value="{{ value }}"{% if action == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+<div class="actions"><button class="btn">搜尋</button><a class="btn secondary" href="{% url 'operation_logs' %}">清除搜尋</a></div>
+</form></div></section>
+<section class="panel"><div class="panel-head"><h2>操作歷程</h2><span class="muted">共 {{ logs.paginator.count }} 筆</span></div><div class="panel-body">
+{% for log in logs %}<details style="border-bottom:1px solid var(--line);padding:16px 0;overflow-wrap:anywhere"><summary><strong>{{ log.created_at|date:"Y/m/d H:i:s" }} · {{ log.actor_label }}</strong> · {{ log.get_action_display }} · {% if log.object_label %}{{ log.object_label }}{% else %}{{ log.path }}{% endif %} · {{ log.outcome }}</summary>
+<p class="small muted">來源：{{ log.source }} · {{ log.method }} {{ log.path }}{% if log.status_code %} · HTTP {{ log.status_code }}{% endif %}<br>資料：{{ log.model_label }} #{{ log.object_id }} · 關聯編號：{{ log.request_id }}</p>
+{% if log.changes %}<div class="table-wrap"><table><thead><tr><th>欄位</th><th>修改前</th><th>修改後</th></tr></thead><tbody>{% for change in log.detail_changes %}<tr><td><code>{{ change.label }}</code></td><td style="white-space:pre-wrap;overflow-wrap:anywhere">{{ change.before }}</td><td style="white-space:pre-wrap;overflow-wrap:anywhere">{{ change.after }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}</details>
+{% empty %}<p class="muted">最近 30 天沒有符合條件的操作紀錄。啟用前未曾記錄的歷程無法回溯補建。</p>{% endfor %}
+<div class="form-actions"><span class="small">每頁 20 筆 · 第 {{ logs.number }} / {{ logs.paginator.num_pages }} 頁</span>{% if logs.has_previous %}<a class="btn secondary" href="?q={{ query|urlencode }}&amp;action={{ action|urlencode }}&amp;page={{ logs.previous_page_number }}">上一頁</a>{% endif %}{% if logs.has_next %}<a class="btn secondary" href="?q={{ query|urlencode }}&amp;action={{ action|urlencode }}&amp;page={{ logs.next_page_number }}">下一頁</a>{% endif %}</div>
+</div></section>
+{% endblock %}

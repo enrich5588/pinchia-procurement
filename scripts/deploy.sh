@@ -21,14 +21,15 @@ docker build --tag "pinjia:$RELEASE" .
 
 # Stop all app writers before taking a consistent database + attachments snapshot.
 # Failures after this point leave the app stopped for an explicit recovery decision.
-trap '"${compose[@]}" stop web || true; echo "Deployment failed; app stopped. Inspect logs and backup before resuming; see docs/auto-deploy.md." >&2' ERR
-"${compose[@]}" stop web
+trap '"${compose[@]}" stop web audit_cleanup || true; echo "Deployment failed; app stopped. Inspect logs and backup before resuming; see docs/auto-deploy.md." >&2' ERR
+"${compose[@]}" stop web audit_cleanup
 backup="$DEPLOY_ROOT/backups/$(date -u +%Y%m%dT%H%M%SZ)-$RELEASE.tar.gz"
 tar -czf "$backup" -C "$DEPLOY_ROOT/shared" data
 if [[ -L "$DEPLOY_ROOT/current" ]]; then
     readlink "$DEPLOY_ROOT/current" > "$backup.previous-release"
 fi
 "${compose[@]}" run --rm --no-deps web python manage.py migrate --noinput
+"${compose[@]}" run --rm --no-deps web python manage.py maintain_operation_logs
 "${compose[@]}" run --rm --no-deps web python manage.py collectstatic --noinput --clear
 "${compose[@]}" up -d --wait --wait-timeout 180
 ln -sfn "$release_dir" "$DEPLOY_ROOT/current"

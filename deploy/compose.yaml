@@ -26,6 +26,28 @@ services:
       options:
         max-size: 10m
         max-file: "3"
+  audit_cleanup:
+    image: pinjia:${RELEASE:?Set RELEASE}
+    restart: unless-stopped
+    env_file:
+      - path: ${DEPLOY_ROOT:?Set DEPLOY_ROOT}/shared/production.env
+        format: raw
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DJANGO_DB_PATH: /data/db.sqlite3
+      DJANGO_MEDIA_ROOT: /data/private-media
+    volumes:
+      - ${DEPLOY_ROOT}/shared/data:/data
+      - ${DEPLOY_ROOT}/shared/secrets:/run/secrets:ro
+    command: ["python", "manage.py", "maintain_operation_logs", "--watch"]
+    depends_on:
+      web:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
   proxy:
     image: caddy:2
     restart: unless-stopped

@@ -19,6 +19,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_variables
 from django.views.decorators.http import require_GET, require_POST
 
+from .audit import record
 from .microsoft import (
     MicrosoftLoginError, build_client, configuration_problem,
     read_graph_profile, synchronize_user, validate_id_token,
@@ -82,6 +83,7 @@ def microsoft_login(request):
         if len(nonces) != 1 or not nonces[0]:
             raise MicrosoftLoginError("無法建立登入驗證碼，請重新開始公司登入。")
     except (MicrosoftLoginError, ValueError, RuntimeError, jwt.PyJWTError, requests.RequestException) as error:
+        record("login_failed", outcome="M365 登入啟動失敗")
         logger.warning("Microsoft login initiation failed: %s", type(error).__name__)
         messages.error(request, str(error) if isinstance(error, MicrosoftLoginError)
                        else "Microsoft 登入服務暫時無法連線，請稍後再試。")
@@ -119,6 +121,7 @@ def microsoft_callback(request):
         user = synchronize_user(claims, profile)
     except (MicrosoftLoginError, ValueError, RuntimeError, jwt.PyJWTError, requests.RequestException,
             IntegrityError, OperationalError) as error:
+        record("login_failed", outcome="M365 登入驗證失敗")
         logger.warning("Microsoft callback failed: %s", type(error).__name__)
         messages.error(request, str(error) if isinstance(error, MicrosoftLoginError)
                        else "登入驗證或帳號同步失敗，請重新登入；若持續發生請聯絡資訊部。")

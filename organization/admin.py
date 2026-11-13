@@ -55,3 +55,20 @@ class PermissionAuditAdmin(admin.ModelAdmin):
 
     def has_view_permission(self, request, obj=None):
         return request.user.is_superuser
+
+
+from .models import OperationLog
+
+@admin.register(OperationLog)
+class OperationLogAdmin(admin.ModelAdmin):
+    list_display = ['created_at','actor_label','action','model_label','object_id','outcome']
+    list_filter = ['action','source']
+    search_fields = ['actor_label','object_label','object_id','path']
+    readonly_fields = [field.name for field in OperationLog._meta.fields]
+    def has_add_permission(self, request): return False
+    def has_change_permission(self, request, obj=None): return False
+    def has_delete_permission(self, request, obj=None): return False
+    def has_view_permission(self, request, obj=None): return request.user.is_superuser
+    def get_queryset(self, request):
+        from .audit import retention_cutoff
+        return super().get_queryset(request).filter(created_at__gte=retention_cutoff())

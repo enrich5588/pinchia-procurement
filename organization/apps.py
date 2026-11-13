@@ -15,3 +15,5 @@ class OrganizationConfig(AppConfig):
 
     def ready(self):
         from . import signals  # noqa: F401
+        from .audit import install
+        install()

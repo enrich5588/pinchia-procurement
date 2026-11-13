@@ -6,6 +6,7 @@ from procurement import views as pviews
 from organization.auth_views import CompanyLoginView, microsoft_callback, microsoft_login
 from organization.permission_views import permission_management
 from organization.panel_views import panel_management
+from organization.audit_views import operation_logs
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -15,6 +16,7 @@ urlpatterns = [
     path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("permissions/", permission_management, name="permission_management"),
     path("panels/", panel_management, name="panel_management"),
+    path("operation-logs/", operation_logs, name="operation_logs"),
     path("", pviews.home, name="home"),
     path("supplies/", include("procurement.urls")),
     path("assets/", include("assets.urls")),

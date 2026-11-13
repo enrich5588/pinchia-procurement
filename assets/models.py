@@ -1,3 +1,4 @@
+from organization.audit_models import AuditedModel
 from decimal import Decimal
 
 from django.conf import settings
@@ -22,7 +23,7 @@ def calculate_asset_total(unit_price, business_tax):
     return Decimal(str(unit_price or 0)) + Decimal(str(business_tax or 0))
 
 
-class Asset(models.Model):
+class Asset(AuditedModel):
     Company = AssetCompany
     Category = AssetCategory
 
@@ -101,7 +102,7 @@ class Asset(models.Model):
             raise ValidationError({"custodian": "保管人員必須屬於財產的所屬部門。"})
 
 
-class AssetImage(models.Model):
+class AssetImage(AuditedModel):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name="images", null=True, blank=True)
     registration = models.ForeignKey(
         "AssetRegistration", on_delete=models.SET_NULL, related_name="images", null=True, blank=True,
@@ -115,7 +116,7 @@ class AssetImage(models.Model):
         verbose_name_plural = "財產圖片"
 
 
-class AssetImportBatch(models.Model):
+class AssetImportBatch(AuditedModel):
     class ImportType(models.TextChoices):
         ASSET = "asset", "財產清冊"
         REGISTRATION = "registration", "資產登記"
@@ -151,7 +152,7 @@ class AssetRegistrationDailySequence(models.Model):
         verbose_name_plural = "資產登記每日流水號"
 
 
-class AssetRegistration(models.Model):
+class AssetRegistration(AuditedModel):
     Status = AssetRegistrationStatus
     Company = AssetCompany
 

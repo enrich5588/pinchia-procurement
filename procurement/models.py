@@ -1,3 +1,4 @@
+from organization.audit_models import AuditedModel
 """辦公用品採購 —— 你的資料模型從這裡開始。
 
 現況只有示範用的最小模型;正式規格在 SPEC.md(一張單大家填/狀態機/逐列簽收)。
@@ -17,7 +18,7 @@ from project_options.procurement import (
 )
 
 
-class SupplyRequest(models.Model):
+class SupplyRequest(AuditedModel):
     """示範起點:一張收單單(表頭)。欄位刻意不完整 —— 補齊它是你的第一個任務。"""
 
     Status = SupplyRequestStatus
@@ -43,7 +44,7 @@ class SupplyRequest(models.Model):
         return f"{self.record_no}({self.get_status_display()})"
 
 
-class DepartmentManager(models.Model):
+class DepartmentManager(AuditedModel):
     """採購功能內的部門主管指派；不修改平台 UserProfile。"""
 
     department = models.OneToOneField(
@@ -98,7 +99,7 @@ class OfficeSupplyApplicationDailySequence(models.Model):
         verbose_name_plural = "用品申請每日流水號"
 
 
-class OfficeSupplyApplication(models.Model):
+class OfficeSupplyApplication(AuditedModel):
     Status = OfficeSupplyApplicationStatus
 
     case_no = models.CharField("案件編號", max_length=9, unique=True, editable=False)
@@ -150,7 +151,7 @@ class OfficeSupplyApplication(models.Model):
             raise ValidationError({"applicant": "申請人必須屬於申請部門。"})
 
 
-class OfficeSupplyApplicationItem(models.Model):
+class OfficeSupplyApplicationItem(AuditedModel):
     Product = OfficeSupplyProduct
 
     application = models.ForeignKey(
@@ -188,7 +189,7 @@ class EquipmentApplicationDailySequence(models.Model):
         verbose_name_plural = "設備申請每日流水號"
 
 
-class EquipmentApplication(models.Model):
+class EquipmentApplication(AuditedModel):
     Status = OfficeSupplyApplicationStatus
 
     case_no = models.CharField("案件編號", max_length=9, unique=True, editable=False)
@@ -240,7 +241,7 @@ class EquipmentApplication(models.Model):
             raise ValidationError({"applicant": "申請人必須屬於申請部門。"})
 
 
-class EquipmentApplicationItem(models.Model):
+class EquipmentApplicationItem(AuditedModel):
     application = models.ForeignKey(
         EquipmentApplication, on_delete=models.CASCADE,
         related_name="items", verbose_name="設備申請",

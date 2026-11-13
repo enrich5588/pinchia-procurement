@@ -1,3 +1,4 @@
+from organization.audit_models import AuditedModel
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -16,7 +17,7 @@ class CollaborationTaskDailySequence(models.Model):
         verbose_name_plural = "協作案件每日流水號"
 
 
-class CollaborationTask(models.Model):
+class CollaborationTask(AuditedModel):
     Status = CollaborationTaskStatus
     SourceForm = CollaborationSourceForm
 

@@ -16,6 +16,7 @@ if [ "$#" -eq 0 ] && [ "${DJANGO_SETTINGS_MODULE:-}" = "config.settings.producti
     exit 1
 fi
 "$python_bin" manage.py migrate --noinput
+"$python_bin" manage.py maintain_operation_logs
 if [ "$#" -gt 0 ]; then
     exec "$@"
 fi

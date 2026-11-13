@@ -41,6 +41,7 @@
     <a class="nav-link{% if shell.section == 'monitor' %} active{% endif %}" href="{% url 'database_monitor' %}"{% if shell.section == 'monitor' %} aria-current="page"{% endif %}>{% include "includes/icon.html" with name="database" %}<span>資料庫監看</span></a>
     <a class="nav-link{% if shell.section == 'permissions' %} active{% endif %}" href="{% url 'permission_management' %}">{% include "includes/icon.html" with name="shield" %}<span>權限管理</span></a>
     <a class="nav-link{% if shell.section == 'panels' %} active{% endif %}" href="{% url 'panel_management' %}">{% include "includes/icon.html" with name="screen" %}<span>面板管理</span></a>
+    <a class="nav-link{% if shell.section == 'logs' %} active{% endif %}" href="{% url 'operation_logs' %}">{% include "includes/icon.html" with name="file" %}<span>操作紀錄</span></a>
     {% endif %}
   </nav>
   <div class="nav-bottom">

@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import DatabaseError, close_old_connections
 
 from organization.department_sync import DepartmentSyncError, sync_departments
+from organization.audit import audit_context, record
 
 
 class Command(BaseCommand):
@@ -17,11 +18,17 @@ class Command(BaseCommand):
         while True:
             try:
                 close_old_connections()
-                result = sync_departments(force=options["force"])
+                with audit_context(source="M365 組織同步"):
+                    result = sync_departments(force=options["force"])
+                    if result is not None:
+                        record("background", outcome="M365 同步成功", changes={key: {"before": None, "after": value} for key, value in result.items()})
                 if result is not None:
                     self.stdout.write(f"M365 departments: {result['departments']}; added: {result['created']}; employees: {result['employees']}")
             except (DepartmentSyncError, DatabaseError) as error:
                 message = str(error) if isinstance(error, DepartmentSyncError) else "部門同步資料庫暫時忙碌，稍後重試。"
+                if isinstance(error, DepartmentSyncError):
+                    with audit_context(source="M365 組織同步"):
+                        record("background", outcome="M365 同步失敗")
                 if not options["watch"]:
                     raise CommandError(message) from error
                 self.stderr.write(message)

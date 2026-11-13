@@ -1,3 +1,4 @@
+from organization.audit_models import AuditedModel
 from django.conf import settings
 from django.db import models
 
@@ -18,7 +19,7 @@ class ApprovalRequestDailySequence(models.Model):
         verbose_name = verbose_name_plural = "簽呈每日流水號"
 
 
-class ApprovalRequest(models.Model):
+class ApprovalRequest(AuditedModel):
     Status = ApprovalRequestStatus
     AmountRange = ApprovalAmountRange
     DocumentType = ApprovalDocumentType
@@ -72,7 +73,7 @@ class ApprovalRequest(models.Model):
         return f"{self.case_no} / {self.subject}"
 
 
-class ApprovalStep(models.Model):
+class ApprovalStep(AuditedModel):
     Status = ApprovalStepStatus
 
     request = models.ForeignKey(

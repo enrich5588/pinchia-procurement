@@ -29,6 +29,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "organization.audit_middleware.OperationAuditMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -48,7 +49,7 @@ TEMPLATES = [{
 
 DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3",
                          "NAME": os.environ.get("DJANGO_DB_PATH", BASE_DIR / "db.sqlite3"),
-                         "OPTIONS": {"timeout": 20}}}
+                         "OPTIONS": {"timeout": 20}, "ATOMIC_REQUESTS": True}}
 
 LANGUAGE_CODE = "zh-hant"
 TIME_ZONE = "Asia/Taipei"

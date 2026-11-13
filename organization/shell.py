@@ -7,6 +7,8 @@ WEEKDAYS = "一二三四五六日"
 
 
 def _section(url_name):
+    if url_name == "operation_logs":
+        return "logs"
     if url_name == "panel_management":
         return "panels"
     if url_name == "permission_management":
@@ -85,6 +87,7 @@ def shell_context(request):
         "monitor": "系統管理",
         "permissions": "權限管理",
         "panels": "面板管理",
+        "logs": "操作紀錄",
     }
     return {"shell": {
         "section": section,
