@@ -7,6 +7,7 @@
 <div class="upload-steps"><span><b>1</b>上傳檔案</span><i></i><span class="current"><b>2</b>預覽確認</span><i></i><span><b>3</b>寫入清冊</span></div>
 {% if batch.skipped %}<details open><summary>已跳過 {{ batch.skipped|length }} 筆缺少必要欄位的資料</summary><div class="details-content"><ul>{% for warning in batch.skipped %}<li>{{ warning }}</li>{% endfor %}</ul></div></details>{% endif %}
 {% if import_errors %}<div class="hint error" role="alert"><div><strong>無法完成匯入</strong><ul>{% for error in import_errors %}<li>{{ error }}</li>{% endfor %}</ul></div></div>{% endif %}
+{% if batch.overwrite_existing %}<div class="hint warning"><div><strong>已啟用覆蓋更新</strong><p>相同財產編號會更新，未存在的編號會新增。請核對各列狀態；預覽欄位（含空值）將完整寫入，原財產歷史關聯與圖片保留。</p></div></div>{% endif %}
 <form method="post">
   {% csrf_token %}{{ formset.management_form }}
   {% if formset.non_form_errors %}<div class="hint error">{{ formset.non_form_errors }}</div>{% endif %}
@@ -24,7 +25,7 @@
         <tr{% if form.errors %} class="row-error"{% endif %}>
           <td>{{ form.row_index }}{{ form.include }}</td>
           <td>{{ form.source_row_number.value }}</td>
-          <td>{% if form.errors %}<span class="badge returned">請修正</span>{% else %}<span class="badge approved">待匯入</span>{% endif %}</td>
+          <td>{% if form.errors %}<span class="badge returned">請修正</span>{% else %}<span class="badge approved">{{ form.initial.import_action }}</span>{% endif %}</td>
           <td>{{ form.asset_no }}{{ form.asset_no.errors }}</td>
           <td>{{ form.company }}{{ form.company.errors }}</td>
           <td>{{ form.category }}{{ form.category.errors }}</td>

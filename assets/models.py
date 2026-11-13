@@ -128,6 +128,8 @@ class AssetImportBatch(AuditedModel):
     source_file = models.FileField(
         "Excel 暫存檔", storage=asset_image_storage, upload_to=asset_import_path
     )
+    overwrite_existing = models.BooleanField("依財產編號覆蓋", default=False)
+    testing_compatibility = models.BooleanField("測試環境批次", default=False)
     source_filename = models.CharField("原始檔名", max_length=255)
     rows = models.JSONField("預覽資料", default=list)
     skipped = models.JSONField("跳過資料", default=list)

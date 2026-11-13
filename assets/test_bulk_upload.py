@@ -3,7 +3,7 @@ from zipfile import ZipFile
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import Client
+from django.test import Client, override_settings
 from organization.testing import OpenPanelsTestCase
 from django.urls import reverse
 from openpyxl import Workbook, load_workbook
@@ -173,6 +173,7 @@ class AssetBulkUploadTests(OpenPanelsTestCase):
         self.assertRedirects(response, reverse("asset_list"))
         self.assertEqual(Asset.objects.count(), 70)
 
+    @override_settings(DEBUG=True)
     def test_testing_mode_uses_fallback_department_and_keeps_source_values(self):
         row = self.valid_row()
         row[12] = "正式環境才有的工程部"
@@ -197,6 +198,7 @@ class AssetBulkUploadTests(OpenPanelsTestCase):
         self.assertContains(response, "1 筆使用替代部門")
         self.assertContains(response, "1 筆保管人員暫時留空")
 
+    @override_settings(DEBUG=True)
     def test_testing_mode_requires_fallback_department(self):
         response = self.client_for(self.manager).post(
             reverse("asset_bulk_upload"),

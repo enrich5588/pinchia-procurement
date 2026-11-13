@@ -22,11 +22,11 @@
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}{{ form.non_field_errors }}
     <div class="field">{{ form.excel_file.label_tag }}{{ form.excel_file }}{{ form.excel_file.errors }}<small>{{ form.excel_file.help_text }}</small></div>
-    <fieldset><legend>測試環境設定</legend>
+    {% if form.testing_controls_enabled %}<fieldset><legend>測試環境設定</legend>
       <label>{{ form.testing_compatibility }}<span><strong>{{ form.testing_compatibility.label }}</strong><small>{{ form.testing_compatibility.help_text }}</small></span></label>
       {{ form.testing_compatibility.errors }}
       <div class="field">{{ form.fallback_department.label_tag }}{{ form.fallback_department }}{{ form.fallback_department.errors }}</div>
-    </fieldset>
+    </fieldset>{% endif %}
     <div class="form-actions"><a class="btn secondary" href="{% url 'registration_bulk_upload_template' %}">下載上傳範本</a><button class="btn" type="submit">讀取並預覽</button></div>
   </form>
 </div></section>

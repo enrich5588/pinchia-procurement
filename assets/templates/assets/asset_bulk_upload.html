@@ -1,35 +1,26 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}批量上傳財產｜品嘉建設集團{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'assets/import-upload.css' %}"><script src="{% static 'assets/import-upload.js' %}" defer></script>{% endblock %}
 {% block content %}
-<div class="page-head">
-  <div><p class="eyebrow">資產管理</p><h1>批量上傳財產</h1><p class="subtitle">上傳 Excel 後會先顯示可編輯的匯入一覽表；確認前不會寫入正式資料庫。</p></div>
-  <div class="actions"><a class="btn secondary" href="{% url 'asset_list' %}">返回財產清冊</a></div>
-</div>
+<div class="page-head"><div><p class="eyebrow">資產管理</p><h1>批量上傳財產</h1><p class="subtitle">上傳後先核對預覽，再確認寫入；可依財產編號更新既有清冊。</p></div><div class="actions"><a class="btn secondary" href="{% url 'asset_list' %}">返回財產清冊</a></div></div>
 <div class="upload-steps"><span class="current"><b>1</b>上傳檔案</span><i></i><span><b>2</b>預覽確認</span><i></i><span><b>3</b>寫入清冊</span></div>
 <section class="panel"><div class="panel-body">
-  <div class="upload-area">{% include "includes/icon.html" with name="upload" %}<h3>選擇財產 Excel</h3><p>正式匯入仍保留全部欄位與逐列驗證。</p></div>
-  <h2>欄位對應</h2>
-  <dl class="kv">
-    <div><dt>進貨日期</dt><dd>採購日期</dd></div>
-    <div><dt>公司代碼</dt><dd>公司</dd></div>
-    <div><dt>資產名稱</dt><dd>財產類別</dd></div>
-    <div><dt>型號＋規格</dt><dd>財產規格型號（分行合併）</dd></div>
-    <div><dt>商品名稱</dt><dd>財產名稱</dd></div>
-    <div><dt>部門／使用者</dt><dd>所屬部門／保管人員</dd></div>
-    <div><dt>圖檔</dt><dd>財產圖片</dd></div>
+<form method="post" enctype="multipart/form-data">{% csrf_token %}{{ form.non_field_errors }}
+  <label class="upload-area upload-drop" for="{{ form.excel_file.id_for_label }}" tabindex="0" role="button" aria-label="選擇或拖曳財產 Excel 檔案" data-upload-drop>
+    {% include "includes/icon.html" with name="upload" %}<strong>點選或拖曳 Excel 到此處</strong><span>支援 .xlsx，檔案上限 150 MB。選擇後按「讀取並預覽」。</span>
+    {{ form.excel_file }}<span class="upload-filename" data-upload-filename aria-live="polite">尚未選擇檔案</span>
+  </label>
+  {{ form.excel_file.errors }}<p class="upload-error" data-upload-error role="alert"></p>
+  <div class="hint"><div><label>{{ form.overwrite_existing }} <strong>{{ form.overwrite_existing.label }}</strong></label><p>{{ form.overwrite_existing.help_text }}</p>{{ form.overwrite_existing.errors }}</div></div>
+  <h2>欄位對應</h2><dl class="kv">
+    <div><dt>進貨日期</dt><dd>採購日期</dd></div><div><dt>公司代碼</dt><dd>公司</dd></div>
+    <div><dt>資產名稱</dt><dd>財產類別</dd></div><div><dt>型號＋規格</dt><dd>財產規格型號（分行合併）</dd></div>
+    <div><dt>商品名稱</dt><dd>財產名稱</dd></div><div><dt>部門／使用者</dt><dd>所屬部門／保管人員</dd></div><div><dt>圖檔</dt><dd>財產圖片</dd></div>
   </dl>
-  <p class="subtitle">財產編號也會一併匯入。公司支援 PCA、PCB、PCC，或直接填公司名稱。只有年份的進貨日期會轉為該年 1 月 1 日。</p>
+  <p class="subtitle">財產編號為比對 key，忽略前後空白與英文大小寫。公司支援 PCA、PCB、PCC 或公司名稱；只有年份的日期會轉為該年 1 月 1 日。</p>
   {% if import_errors %}<div class="hint error" role="alert"><div><strong>無法匯入，請修正以下資料</strong><ul>{% for error in import_errors %}<li>{{ error }}</li>{% endfor %}</ul></div></div>{% endif %}
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}{{ form.non_field_errors }}
-    <div class="field">{{ form.excel_file.label_tag }}{{ form.excel_file }}{{ form.excel_file.errors }}<small>{{ form.excel_file.help_text }}</small></div>
-    <fieldset class="panel" style="margin-top:16px"><div class="panel-body">
-      <legend>測試環境設定</legend>
-      <label class="field">{{ form.testing_compatibility }}<span><strong>{{ form.testing_compatibility.label }}</strong><small>{{ form.testing_compatibility.help_text }}</small></span></label>
-      {{ form.testing_compatibility.errors }}
-      <div class="field">{{ form.fallback_department.label_tag }}{{ form.fallback_department }}{{ form.fallback_department.errors }}</div>
-    </div></fieldset>
-    <div class="form-actions"><a class="btn secondary" href="{% url 'asset_list' %}">返回財產清冊</a><button class="btn" type="submit">讀取並預覽</button></div>
-  </form>
-</div></section>
+  {% if form.testing_controls_enabled %}<fieldset class="panel" style="margin-top:16px"><div class="panel-body"><legend>測試環境設定</legend><label class="field">{{ form.testing_compatibility }}<span><strong>{{ form.testing_compatibility.label }}</strong><small>{{ form.testing_compatibility.help_text }}</small></span></label>{{ form.testing_compatibility.errors }}<div class="field">{{ form.fallback_department.label_tag }}{{ form.fallback_department }}{{ form.fallback_department.errors }}</div></div></fieldset>{% endif %}
+  <div class="form-actions"><a class="btn secondary" href="{% url 'asset_list' %}">返回財產清冊</a><button class="btn" type="submit">讀取並預覽</button></div>
+</form></div></section>
 {% endblock %}

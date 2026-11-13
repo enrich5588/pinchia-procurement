@@ -1,5 +1,6 @@
 from datetime import date, datetime, timedelta
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
@@ -20,6 +21,7 @@ from project_options.assets import (
 )
 
 from .forms import (
+    AssetLedgerUploadForm,
     AssetBulkApprovalFormSet,
     AssetBulkUploadForm,
     AssetImportPreviewFormSet,
@@ -162,7 +164,7 @@ def asset_bulk_upload(request):
         expired.source_file.delete(save=False)
     expired_batches.delete()
 
-    form = AssetBulkUploadForm(request.POST or None, request.FILES or None)
+    form = AssetLedgerUploadForm(request.POST or None, request.FILES or None)
     import_errors = []
     if request.method == "POST" and form.is_valid():
         try:
@@ -180,6 +182,8 @@ def asset_bulk_upload(request):
             upload.seek(0)
             batch = AssetImportBatch(
                 source_filename=upload.name,
+                overwrite_existing=form.cleaned_data.get("overwrite_existing", False),
+                testing_compatibility=form.cleaned_data.get("testing_compatibility", False),
                 rows=preview.rows,
                 skipped=preview.skipped,
                 created_by=request.user,
@@ -216,9 +220,11 @@ def asset_bulk_upload_preview(request, pk):
     if not can_manage_assets(request.user):
         raise PermissionDenied("只有具備處理權限的人員可確認批量上傳公司財產。")
     batch = get_object_or_404(
-        AssetImportBatch, pk=pk, created_by=request.user,
+        AssetImportBatch.objects.select_for_update() if request.method == "POST" else AssetImportBatch.objects.all(), pk=pk, created_by=request.user,
         import_type=AssetImportBatch.ImportType.ASSET,
     )
+    if not settings.DEBUG and batch.testing_compatibility:
+        raise PermissionDenied("測試環境的預覽不可在正式環境匯入，請重新上傳。")
     initial = [
         dict(
             row,
@@ -226,6 +232,7 @@ def asset_bulk_upload_preview(request, pk):
             source_row_number=row["row_number"],
             image_status="有圖片" if row.get("image_path") else "無圖片",
             include=True,
+            import_action=("覆蓋更新" if row.get("target_id") and batch.overwrite_existing else "已存在（需啟用覆蓋）" if row.get("target_id") else "新增"),
         )
         for index, row in enumerate(batch.rows)
     ]
@@ -239,6 +246,7 @@ def asset_bulk_upload_preview(request, pk):
 
     formset = AssetImportPreviewFormSet(
         request.POST or None,
+        overwrite_existing=batch.overwrite_existing,
         initial=initial,
         prefix="rows",
     )
@@ -250,7 +258,7 @@ def asset_bulk_upload_preview(request, pk):
         except (ValidationError, IntegrityError) as exc:
             import_errors = [f"資料無法匯入：{exc}"]
         else:
-            message = f"批量匯入完成：新增 {result.asset_count} 筆財產、{result.image_count} 張圖片。"
+            message = f"批量匯入完成：新增 {result.asset_count} 筆財產、更新 {result.updated_count} 筆財產、{result.image_count} 張圖片。"
             if result.year_only_date_count:
                 message += f" 其中 {result.year_only_date_count} 筆僅有年份，採購日期已設為該年 1 月 1 日。"
             if result.fallback_department_count:
@@ -298,6 +306,7 @@ def registration_bulk_upload(request):
                 batch = AssetImportBatch(
                     import_type=AssetImportBatch.ImportType.REGISTRATION,
                     source_filename=upload.name,
+                    testing_compatibility=form.cleaned_data.get("testing_compatibility", False),
                     rows=preview.rows,
                     skipped=preview.skipped,
                     created_by=request.user,
@@ -338,6 +347,8 @@ def registration_bulk_upload_preview(request, pk):
         AssetImportBatch, pk=pk, created_by=request.user,
         import_type=AssetImportBatch.ImportType.REGISTRATION,
     )
+    if not settings.DEBUG and batch.testing_compatibility:
+        raise PermissionDenied("測試環境的預覽不可在正式環境匯入，請重新上傳。")
     initial = [
         dict(
             row,

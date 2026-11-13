@@ -49,6 +49,7 @@ cp .env.example .env
 - 部門與個人權限、預設值及管理方式請見 [權限管理說明](docs/PERMISSIONS.md)。
 - 各功能開發與開放狀態，請見 [面板管理說明](docs/PANELS.md)。
 - 操作歷程、修改前後值及 30 天保存設定，請見 [操作紀錄說明](docs/OPERATION-LOGS.md)。
+- 財產 Excel 批量上傳及依財產編號覆蓋規則，請見 [匯入說明](docs/asset-import.md)。
 - M365 全公司部門與員工定期同步請見 [組織同步說明](docs/m365-directory-sync.md)；需要 Application `User.Read.All` 及管理員同意。
 - `FEATURE_OPEN_TO_ALL`：預設 true，false 時僅超級使用者可進入受控功能。
 - `DJANGO_ALLOWED_HOSTS`：逗號分隔的主機名稱。

@@ -1,4 +1,5 @@
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.forms import BaseFormSet, formset_factory
 
@@ -263,7 +264,12 @@ class AssetBulkUploadForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["fallback_department"].queryset = Department.objects.order_by("name")
+        self.testing_controls_enabled = settings.DEBUG
+        if self.testing_controls_enabled:
+            self.fields["fallback_department"].queryset = Department.objects.order_by("name")
+        else:
+            self.fields.pop("testing_compatibility")
+            self.fields.pop("fallback_department")
 
     def clean_excel_file(self):
         upload = self.cleaned_data["excel_file"]
@@ -275,9 +281,16 @@ class AssetBulkUploadForm(forms.Form):
 
     def clean(self):
         cleaned = super().clean()
+        if not settings.DEBUG and (self.data.get("testing_compatibility") or self.data.get("fallback_department")):
+            raise forms.ValidationError("正式環境不支援測試相容模式，請使用正確的部門與人員資料。")
         if cleaned.get("testing_compatibility") and not cleaned.get("fallback_department"):
             self.add_error("fallback_department", "啟用測試環境相容模式時，請選擇替代部門。")
         return cleaned
+
+
+class AssetLedgerUploadForm(AssetBulkUploadForm):
+    overwrite_existing = forms.BooleanField(label="依財產編號更新既有資料（覆蓋）", required=False,
+        help_text="相同編號更新，不同編號新增；預覽確認後才寫入。預覽欄位完整覆蓋（包含空值），既有圖片保留，Excel 圖片另行新增。")
 
 
 class AssetImportPreviewRowForm(forms.Form):
@@ -344,6 +357,10 @@ class AssetImportPreviewRowForm(forms.Form):
 
 
 class BaseAssetImportPreviewFormSet(BaseFormSet):
+    def __init__(self, *args, overwrite_existing=False, **kwargs):
+        self.overwrite_existing = overwrite_existing
+        super().__init__(*args, **kwargs)
+
     def clean(self):
         super().clean()
         selected = [
@@ -363,8 +380,8 @@ class BaseAssetImportPreviewFormSet(BaseFormSet):
             number for number in Asset.objects.values_list("asset_no", flat=True)
             if number.casefold() in requested
         ]
-        if existing:
-            raise forms.ValidationError(f"下列財產編號已存在：{', '.join(existing)}")
+        if existing and not self.overwrite_existing:
+            raise forms.ValidationError(f"下列財產編號已存在：{', '.join(existing)}；請重新上傳並勾選覆蓋選項。")
 
 
 AssetImportPreviewFormSet = formset_factory(

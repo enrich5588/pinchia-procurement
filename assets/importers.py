@@ -2,12 +2,16 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
+import hashlib
+import json
 import posixpath
 import re
 from zipfile import BadZipFile, ZipFile
 import xml.etree.ElementTree as ET
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models.functions import Lower, Trim
 from django.core.files.base import ContentFile
 from django.db import transaction
 from openpyxl import load_workbook
@@ -57,6 +61,7 @@ class AssetWorkbookResult:
     year_only_date_count: int
     fallback_department_count: int
     unmatched_user_count: int
+    updated_count: int = 0
 
 
 @dataclass(frozen=True)
@@ -247,8 +252,35 @@ def _validate_image(archive, path, row_number):
     return data, f"excel-row-{row_number}{IMAGE_SUFFIXES[image_format]}"
 
 
+
+def asset_revision(asset):
+    from organization.audit import snapshot
+    return hashlib.sha256(json.dumps(snapshot(asset), sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+
+
+def matching_assets(number):
+    return Asset.objects.annotate(import_key=Lower(Trim('asset_no'))).filter(import_key=number.strip().lower())
+
+
+def annotate_asset_targets(rows):
+    keys = [row['asset_no'].strip().lower() for row in rows]
+    grouped = {}
+    for asset in Asset.objects.annotate(import_key=Lower(Trim('asset_no'))).filter(import_key__in=keys):
+        grouped.setdefault(asset.asset_no.strip().lower(), []).append(asset)
+    for row in rows:
+        matches = grouped.get(row['asset_no'].strip().lower(), [])
+        if len(matches) > 1:
+            raise AssetWorkbookError([f"財產編號 {row['asset_no']} 對應多筆既有資料，請先整理重複編號。"])
+        target = matches[0] if matches else None
+        row['target_id'] = target.pk if target else None
+        row['target_revision'] = asset_revision(target) if target else ''
+    return rows
+
+
 def prepare_asset_workbook(upload, *, fallback_department=None):
     """Parse an Excel workbook into editable JSON-safe rows without writing assets."""
+    if fallback_department is not None and not settings.DEBUG:
+        raise AssetWorkbookError(["正式環境不支援測試相容模式。"])
     upload.seek(0)
     try:
         workbook = load_workbook(upload, data_only=True, read_only=True)
@@ -363,7 +395,7 @@ def prepare_asset_workbook(upload, *, fallback_department=None):
             })
         if not rows and not skipped:
             raise AssetWorkbookError(["工作表中沒有可匯入的財產資料。"])
-        return AssetWorkbookPreview(rows=rows, skipped=skipped)
+        return AssetWorkbookPreview(rows=annotate_asset_targets(rows), skipped=skipped)
     finally:
         workbook.close()
         upload.seek(0)
@@ -371,6 +403,8 @@ def prepare_asset_workbook(upload, *, fallback_department=None):
 
 def prepare_registration_workbook(upload, *, fallback_department=None):
     """Parse registration rows without requiring or reading a property number."""
+    if fallback_department is not None and not settings.DEBUG:
+        raise AssetWorkbookError(["正式環境不支援測試相容模式。"])
     upload.seek(0)
     try:
         workbook = load_workbook(upload, data_only=True, read_only=True)
@@ -498,8 +532,19 @@ def prepare_registration_workbook(upload, *, fallback_department=None):
         upload.seek(0)
 
 
+@transaction.atomic
 def import_asset_preview(batch, cleaned_rows, actor):
+    from .permissions import can_manage_assets
+    if batch.created_by_id != actor.pk or not can_manage_assets(actor):
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied('無權確認此批次匯入。')
+    if not settings.DEBUG and batch.testing_compatibility:
+        raise AssetWorkbookError(['測試環境預覽不可在正式環境匯入。'])
     selected = [row for row in cleaned_rows if row.get("include")]
+    keys = [row['asset_no'].strip().upper() for row in selected]
+    if len(keys) != len(set(keys)):
+        raise AssetWorkbookError(['匯入資料中的財產編號不可重複。'])
+    created_count = updated_count = 0
     sources = batch.rows
     saved_files = []
     image_count = 0
@@ -510,20 +555,32 @@ def import_asset_preview(batch, cleaned_rows, actor):
                 if row_index < 0 or row_index >= len(sources):
                     raise AssetWorkbookError(["預覽資料索引無效，請重新上傳 Excel。"])
                 original = sources[row_index]
-                asset = Asset(
-                    asset_no=cleaned["asset_no"], name=cleaned["name"],
-                    company=cleaned["company"], category=cleaned["category"],
-                    brand=cleaned.get("brand", ""),
-                    specification=cleaned.get("specification", ""),
-                    accessories=cleaned.get("accessories", ""),
-                    quantity=cleaned["quantity"], unit_price=cleaned.get("unit_price"),
-                    business_tax=cleaned.get("business_tax"),
-                    department=cleaned["department"], custodian=cleaned.get("custodian"),
-                    purchase_date=cleaned["purchase_date"], notes=cleaned.get("notes", ""),
-                    created_by=actor, updated_by=actor,
-                )
+                number = cleaned['asset_no'].strip().upper()
+                matches = list(matching_assets(number).select_for_update())
+                if len(matches) > 1:
+                    raise AssetWorkbookError([f'財產編號 {number} 對應多筆資料，無法覆蓋。'])
+                asset = matches[0] if matches else None
+                if asset and not batch.overwrite_existing:
+                    raise AssetWorkbookError([f'財產編號 {number} 已存在；本批次未啟用覆蓋。'])
+                if batch.overwrite_existing:
+                    if number != original['asset_no'].strip().upper():
+                        raise AssetWorkbookError(['覆蓋模式不可變更財產編號；請重新上傳以預覽新的比對對象。'])
+                    expected = original.get('target_id')
+                    if (asset.pk if asset else None) != expected or (asset and asset_revision(asset) != original.get('target_revision')):
+                        raise AssetWorkbookError([f'財產 {number} 在預覽後已有異動，請重新上傳確認，避免覆蓋他人的修改。'])
+                is_update = asset is not None
+                if asset is None:
+                    asset = Asset(asset_no=number, created_by=actor)
+                for field in ['name','company','category','brand','specification','accessories','quantity',
+                              'unit_price','business_tax','department','custodian','purchase_date','notes']:
+                    setattr(asset, field, cleaned.get(field))
+                asset.updated_by = actor
                 asset.full_clean(validate_unique=False)
                 asset.save()
+                if is_update:
+                    updated_count += 1
+                else:
+                    created_count += 1
                 image_path = original.get("image_path")
                 if image_path:
                     try:
@@ -539,13 +596,16 @@ def import_asset_preview(batch, cleaned_rows, actor):
                     saved_files.append((image.image.storage, image.image.name))
                     image.save()
                     image_count += 1
+            storage, source_name = batch.source_file.storage, batch.source_file.name
+            batch.delete()
+            transaction.on_commit(lambda: storage.delete(source_name), robust=True)
     except Exception:
         for storage, name in saved_files:
             storage.delete(name)
         raise
 
     result = AssetWorkbookResult(
-        asset_count=len(selected), image_count=image_count,
+        asset_count=created_count, updated_count=updated_count, image_count=image_count,
         year_only_date_count=sum(
             bool(sources[row["row_index"]].get("year_only_date")) for row in selected
         ),
@@ -556,8 +616,6 @@ def import_asset_preview(batch, cleaned_rows, actor):
             "Excel 原始使用者：" in (row.get("notes") or "") for row in selected
         ),
     )
-    batch.source_file.delete(save=False)
-    batch.delete()
     return result
 
 
@@ -627,6 +685,8 @@ def import_registration_preview(batch, cleaned_rows, actor):
 
 
 def import_asset_workbook(upload, actor, *, fallback_department=None):
+    if fallback_department is not None and not settings.DEBUG:
+        raise AssetWorkbookError(["正式環境不支援測試相容模式。"])
     upload.seek(0)
     try:
         workbook = load_workbook(upload, data_only=True, read_only=True)
